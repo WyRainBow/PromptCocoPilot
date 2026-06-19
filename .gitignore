@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+node_modules/
+.env
+*.log
+# For local testing only
+test-output/
