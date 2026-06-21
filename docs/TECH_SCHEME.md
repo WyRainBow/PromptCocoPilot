@@ -98,6 +98,26 @@ This delivers the "raw input → context completion → rewrite → human review
 
 - Unit tests for clean() and enhance_prompt (with/without context).
 - Syntax checks on all Python.
+
+## 8. Qoder IDE Support
+
+Qoder (AI coding IDE) supports MCP via `~/.qoder/mcp.json` (and plugin mcp.json).
+
+- Added prompt-enhancer MCP server entry (same as Claude).
+- Launch: `open -a Qoder /path/to/project`
+- Fair test: Fresh chat (no preceding dialogue), direct vague prompt for base behavior.
+- With enhancer: Use MCP tool `enhance_prompt` (draft + context) or /prompt-enhancer if supported.
+- See new `docs/qoder-integration.md` for details and test patterns.
+
+Qoder quests/tasks: Ideal for testing context-aware enhancement on real vague user inputs (e.g. "帮我看看登录模块这个接口是什么" or PDF parsing questions). Enhancer forces search first -> rewrite -> review, vs base direct execution.
+
+## 9. Testing Notes (from user sessions)
+
+- Base (no tool, fresh): Direct code search + broad explanation or clarification. Lacks structured before/after.
+- With skill/MCP: Model searches (project tools), calls enhancer (real LLM rewrite with context), outputs improved prompt + changes + options.
+- Value: Pre-send optimization, transparency, better first execution. Replicates Kilo Code in MCP-compatible IDEs.
+
+Update SKILL.md or MCP if Qoder quest behavior differs.
 - The server is a minimal but functional stdio MCP implementation.
 - All code committed only after verification.
 

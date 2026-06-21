@@ -33,25 +33,58 @@ Call `enhance_prompt` with:
 The tool will return only the enhanced prompt text.
 
 **Best Practices**:
-- Include last 5-10 messages as history by default (configurable in settings).
-- Always surface the enhanced prompt for human review (transparency).
-- Do not execute the original vague prompt directly.
-- Use a fast/small model for the enhancement step if your host supports it (saves tokens and latency).
+- **Auto-trigger on vague inputs**: If the user's message is short, ambiguous, or lacks specifics (e.g. "fix bug", "add feature", "make it better"), **automatically call the enhance_prompt tool** before doing any work.
+- Include last 8-12 messages as history by default. Claude Code can summarize or select relevant turns if context is too long.
+- Always surface the **before/after** for human review (transparency is key, just like Kilo Code's ✨ button).
+- Present what was improved (e.g. "Added specific file references and success criteria from recent discussion").
+- Do **not** execute the original vague prompt directly.
+- The enhancement uses a fast model (via Dashscope in the MCP server) to keep latency low.
+- Support passing extra context: current file paths, selected code, project conventions, user preferences.
 
-**Example Invocation in Claude Code chat**:
-User: "add login"
-You (internally):
-Call enhance_prompt with draft="add login", context= [paste relevant recent messages + files]
+**Advanced Features Supported**:
+- Conversation history awareness (cross-turn intent accumulation)
+- Editor/workspace context injection (files, selections)
+- Structured output: The enhanced prompt should be ready-to-send, concrete, with clear steps or requirements.
+- User can edit the result before sending (the tool returns text you can modify in the input box).
+- Long-term: In future, can incorporate persistent user style/preferences (for now, rely on recent context + explicit instructions).
 
-Then respond with:
-"Enhanced prompt: [result]
+**Example Flow (Automatic)**:
+User types: "fix the auth"
+Claude (following this skill):
+1. Detects vague prompt.
+2. Assembles context: recent messages about login 401 + current file src/auth/login.py + selected function.
+3. Calls enhance_prompt tool with draft + full context.
+4. Gets improved prompt.
+5. Shows user: 
+   "I used the prompt enhancer. Here's the optimized version:
 
-Does this look good? Shall I proceed with the improved version?"
+   [enhanced text]
+
+   Changes: Added file reference, specific error, expected behavior from history.
+   Does this look correct? (You can edit it before sending)"
+
+**Tool Usage (via MCP)**:
+Call `enhance_prompt` with:
+- `draft`: The user's raw input.
+- `context`: Concatenated relevant history + editor context. Example format:
+  ```
+  Recent conversation (last turns):
+  User: ...
+  Assistant: ...
+
+  Current file: auth/login.py
+  Selected code: def check_session(...)
+
+  Draft: fix the auth bug
+  ```
+
+The tool will return only the enhanced prompt text (cleaned).
 
 **Configuration**:
-- Pair with the MCP server in `mcp-server/server.py`.
-- For best results, enable "include task history" equivalent in your client settings.
+- Pair with the MCP server in `mcp-server/server.py` (it auto-detects DASHSCOPE_API_KEY from env or /Users/wy770/Resume-Agent/.env and performs real enhancement).
+- For best results, in Claude Code settings or prompts, prefer including recent task history when calling the tool.
+- The server uses a fast model for enhancement to save tokens/latency.
 
-This skill makes every input as powerful as if the user had written a perfect prompt from the start. 
+This skill makes every input as powerful as if the user had written a perfect prompt from the start, with full context awareness. It closely replicates Kilo Code's Enhance Prompt flow inside Claude Code via MCP + Skill.
 
-See `docs/` and `examples/` for full setup and advanced context strategies.
+See `docs/claude-code-integration.md` and `docs/TECH_SCHEME.md` for setup, advanced strategies, and technical details.
