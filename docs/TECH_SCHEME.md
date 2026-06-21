@@ -30,6 +30,16 @@ This mirrors Kilo Code exactly:
   - Supports prepending context.
   - Falls back to simple structured improvement for testing.
   - Production: pass a `generate_fn` that uses the user's preferred model (small/fast model recommended for speed).
+- `enhance_next_prompt(draft, prompt_context, generate_fn=None)`:
+  - Packages a follow-up draft with structured conversation and code context.
+  - Reuses `enhance_prompt` after context assembly.
+  - Intended for vague next-turn prompts like "那这个怎么改" after the assistant has already read code.
+
+### 2.1.1 Context Packaging (`mcp-server/context_packaging.py`)
+- `PromptContext`: structured carrier for conversation, code facts, task state, editor context, and user preferences.
+- `CodeFact`: records files/symbols/summaries already learned from code reading.
+- `assemble_enhancement_context(...)`: produces the text payload sent to the rewriter.
+- `prompt_context_from_dict(...)`: converts MCP JSON arguments into `PromptContext`.
 
 Why direct generateText equivalent:
 - Fast, low token, no tool use or agent overhead.
@@ -38,7 +48,7 @@ Why direct generateText equivalent:
 ### 2.2 MCP Server (`mcp-server/server.py`)
 - Stdio JSON-RPC compatible with Claude MCP clients.
 - Registers tool `enhance_prompt`.
-- Input: `draft` (required), `context` (optional string), `include_history`.
+- Input: `draft` (required), `context` (optional string), `include_history`, and structured next-turn fields (`conversation`, `code_facts`, `task_state`, `current_file`, `selected_code`, `user_preferences`).
 - Output: Enhanced text only.
 - Can be extended to support full `mcp` SDK.
 
@@ -54,7 +64,9 @@ Deployment:
 
 ### 2.4 Context Assembly (Examples)
 - See `examples/context-assembly.py`.
+- See `examples/enhance-next-turn.py` and `examples/next-turn-context.json` for the follow-up prompt packaging flow.
 - Typical: recent_messages (last N) + current_file + selected_code.
+- Better for coding conversations: recent messages + code facts already gathered + task state + editor state + user preferences.
 - In advanced callers (plugins): pull from editor API + session store.
 - For pure skill mode: Claude can summarize recent turns itself and pass as context.
 
@@ -63,8 +75,8 @@ Deployment:
 1. MCP registration → tool becomes available.
 2. Skill file → Claude knows the procedure and best practices.
 3. User experience:
-   - User types vague prompt.
-   - Claude (guided by skill or user) calls tool with assembled context.
+   - User types vague prompt or follow-up question.
+   - Claude (guided by skill or user) calls tool with assembled context, preferably structured next-turn fields.
    - Presents enhanced version.
    - User approves → sends the optimized prompt.
 

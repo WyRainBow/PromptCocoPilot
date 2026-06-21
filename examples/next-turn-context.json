@@ -1,0 +1,32 @@
+{
+  "draft": "那这个怎么改",
+  "conversation": [
+    {
+      "role": "user",
+      "content": "帮我看看登录模块这个接口是什么"
+    },
+    {
+      "role": "assistant",
+      "content": "我读取了 src/auth.py 和 src/session.py。login() 会校验密码并创建 session，validate_session() 负责后续请求校验。"
+    }
+  ],
+  "code_facts": [
+    {
+      "path": "src/auth.py",
+      "summary": "login() validates credentials and calls create_session() after success.",
+      "symbols": ["login", "create_session"]
+    },
+    {
+      "path": "src/session.py",
+      "summary": "validate_session() can return 401 Unauthorized when token lookup misses.",
+      "symbols": ["validate_session"]
+    }
+  ],
+  "task_state": "正在定位有效用户登录后仍返回 401 Unauthorized 的原因。",
+  "current_file": "src/session.py",
+  "selected_code": "def validate_session(token):\n    ...",
+  "user_preferences": [
+    "先说明根因，再给最小修改方案。",
+    "修改后补充或更新测试。"
+  ]
+}

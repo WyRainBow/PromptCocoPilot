@@ -34,8 +34,10 @@ sys.path.insert(0, ".")
 
 try:
     from enhance import enhance_prompt
+    from context_packaging import assemble_enhancement_context, prompt_context_from_dict
 except ImportError:
     from mcp_server.enhance import enhance_prompt  # type: ignore
+    from mcp_server.context_packaging import assemble_enhancement_context, prompt_context_from_dict  # type: ignore
 
 # Simple MCP stdio server implementation (compatible with common Claude MCP clients)
 # For full compliance, `pip install mcp` and use the official SDK is recommended.
@@ -43,6 +45,27 @@ except ImportError:
 
 def send(message: dict):
     print(json.dumps(message), flush=True)
+
+def handle_enhance_prompt_tool(arguments: dict[str, Any]) -> str:
+    draft = arguments.get("draft", "")
+    context = arguments.get("context") or ""
+
+    structured_context_keys = {
+        "conversation",
+        "code_facts",
+        "task_state",
+        "current_file",
+        "selected_code",
+        "user_preferences",
+    }
+    if any(key in arguments for key in structured_context_keys):
+        packaged_context = assemble_enhancement_context(
+            draft,
+            prompt_context_from_dict(arguments),
+        )
+        context = f"{context}\n\n{packaged_context}".strip() if context else packaged_context
+
+    return enhance_prompt(draft, context or None)
 
 def main():
     # Handshake / init (basic)
@@ -93,6 +116,50 @@ def main():
                                     "include_history": {
                                         "type": "boolean",
                                         "description": "Whether to include conversation history (if context not directly provided)."
+                                    },
+                                    "conversation": {
+                                        "type": "array",
+                                        "description": "Recent conversation messages to package with the draft for next-turn enhancement.",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "role": {"type": "string"},
+                                                "content": {"type": "string"}
+                                            },
+                                            "required": ["role", "content"]
+                                        }
+                                    },
+                                    "code_facts": {
+                                        "type": "array",
+                                        "description": "Facts already learned from reading the codebase, including files, summaries, and symbols.",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "path": {"type": "string"},
+                                                "summary": {"type": "string"},
+                                                "symbols": {
+                                                    "type": "array",
+                                                    "items": {"type": "string"}
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "task_state": {
+                                        "type": "string",
+                                        "description": "Current investigation or implementation state to preserve across the rewrite."
+                                    },
+                                    "current_file": {
+                                        "type": "string",
+                                        "description": "Current editor file path, if known."
+                                    },
+                                    "selected_code": {
+                                        "type": "string",
+                                        "description": "Current selected code or relevant snippet, if known."
+                                    },
+                                    "user_preferences": {
+                                        "type": "array",
+                                        "description": "User constraints or style preferences to carry into the enhanced prompt.",
+                                        "items": {"type": "string"}
                                     }
                                 },
                                 "required": ["draft"]
@@ -107,10 +174,7 @@ def main():
             arguments = params.get("arguments", {})
 
             if tool_name == "enhance_prompt":
-                draft = arguments.get("draft", "")
-                context = arguments.get("context") or ""
-                # Simple handling
-                enhanced = enhance_prompt(draft, context or None)
+                enhanced = handle_enhance_prompt_tool(arguments)
                 send({
                     "jsonrpc": "2.0",
                     "id": req_id,

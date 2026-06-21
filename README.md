@@ -14,6 +14,7 @@
 
 - 轻量级专用重写器（参考 Kilo Code 的 enhance-prompt.ts 设计）
 - 支持对话历史上下文（最近 N 条消息）
+- 支持「下一轮问题打包」：把用户新草稿、前文对话、已读取代码事实、当前任务状态、当前文件/选区、用户偏好一起送去增强
 - 通过 MCP 或调用方集成编辑器/工作区上下文
 - 提供 MCP Tool，可在 Claude Code 及其他支持 MCP 的 Agent 中使用
 - 包含 SKILL.md，便于在 Claude Code 中集成
@@ -26,6 +27,30 @@
 - `docs/` — 详细文档和技术方案
 - `examples/` — 使用示例和配置
 - `tests/` — 验证脚本和测试用例
+
+## 推荐流程：下一轮问题增强
+
+这个项目最适合用在连续编码对话里，不只是润色一句话，而是把“下一句问题”和“前面已经发生过的上下文”一起打包：
+
+1. 用户输入一个很短的后续问题，例如「那这个怎么改」
+2. 调用方收集最近对话、Claude Code 已读过的文件、从代码里得到的事实、当前任务状态、编辑器上下文和用户偏好
+3. 调用 `enhance_prompt`，传入 `draft` 加结构化上下文
+4. 工具返回一版可审阅的优化提示词
+5. 用户确认后，再把优化后的提示词发给 Claude Code 执行
+
+`enhance_prompt` 现在既支持传统的 `context` 字符串，也支持结构化字段：
+
+- `conversation`：最近的 `{role, content}` 对话消息
+- `code_facts`：已经读取代码后得到的 `{path, summary, symbols}` 事实
+- `task_state`：当前排查/实现进度
+- `current_file` / `selected_code`：编辑器上下文
+- `user_preferences`：希望保留的用户约束或风格偏好
+
+不调用模型也可以先查看打包效果：
+
+```bash
+python3 examples/enhance-next-turn.py examples/next-turn-context.json --print-context
+```
 
 ## 安装（Claude Code）
 

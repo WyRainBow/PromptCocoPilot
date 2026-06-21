@@ -14,6 +14,11 @@ import requests
 from pathlib import Path
 from typing import Optional, Callable, Any
 
+try:
+    from context_packaging import PromptContext, assemble_enhancement_context
+except ImportError:
+    from mcp_server.context_packaging import PromptContext, assemble_enhancement_context  # type: ignore
+
 # ==================== Real Dashscope Support (for MCP server) ====================
 DASHSCOPE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 RESUME_AGENT_ENV = Path("/Users/wy770/Resume-Agent/.env")
@@ -122,6 +127,21 @@ def enhance_prompt(
         enhanced = generate_fn(full_user_content, INSTRUCTION)
 
     return clean(enhanced)
+
+def enhance_next_prompt(
+    text: str,
+    prompt_context: PromptContext,
+    generate_fn: Optional[Callable[[str, str], str]] = None,
+) -> str:
+    """
+    Enhance a next-turn user prompt with packaged conversation and code context.
+
+    This is the intended flow for follow-up prompts like "那这个怎么改": callers
+    pass the draft plus facts already gathered by Claude Code/Qoder, then the
+    rewriter produces a concrete prompt for user review before execution.
+    """
+    packaged_context = assemble_enhancement_context(text, prompt_context)
+    return enhance_prompt(text, packaged_context, generate_fn=generate_fn)
 
 def _simple_fallback_enhance(text: str, context: Optional[str] = None) -> str:
     """Very basic fallback for testing without LLM. Not for production."""

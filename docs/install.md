@@ -42,6 +42,24 @@ python3 mcp-server/server.py
 
 Use the tool from chat: "enhance this prompt: fix the bug" (Claude should discover and use the tool).
 
+For follow-up prompts during a coding task, pass structured context when possible:
+
+```json
+{
+  "draft": "那这个怎么改",
+  "conversation": [
+    {"role": "assistant", "content": "Read src/auth.py and src/session.py; login succeeds but later session validation returns 401."}
+  ],
+  "code_facts": [
+    {"path": "src/session.py", "summary": "validate_session returns 401 when token lookup misses", "symbols": ["validate_session"]}
+  ],
+  "task_state": "Investigating valid users receiving 401 after login",
+  "current_file": "src/session.py",
+  "selected_code": "def validate_session(token): ...",
+  "user_preferences": ["Explain root cause first", "Prefer minimal code changes"]
+}
+```
+
 See `examples/` for sample context assembly and full flows.
 
 ## Notes

@@ -10,7 +10,7 @@
 **How it works**:
 1. User types a draft in the input.
 2. You (or user via command) call the `enhance_prompt` MCP tool.
-3. Provide the draft + relevant context from the current conversation/task (recent messages, current files if known, selected code snippets).
+3. Provide the draft + relevant context from the current conversation/task. Prefer structured fields for recent messages, code facts already gathered, task state, current file, selected code, and user preferences.
 4. The tool returns an improved prompt.
 5. Present the before/after to the user (or directly replace in input if UX supports).
 6. User reviews and sends the improved version.
@@ -18,7 +18,13 @@
 **Tool Usage (via MCP)**:
 Call `enhance_prompt` with:
 - `draft`: The user's raw input.
-- `context`: Concatenated relevant history + editor context. Example format:
+- `conversation`: recent `{role, content}` messages, especially the turns where files were read and conclusions were made.
+- `code_facts`: facts already learned from the codebase as `{path, summary, symbols}`.
+- `task_state`: what is currently known or being attempted.
+- `current_file`: current editor file path, if known.
+- `selected_code`: selected code or a relevant snippet, if known.
+- `user_preferences`: constraints the user wants preserved.
+- `context`: optional free-form context string when structured fields are unavailable. Example format:
   ```
   Recent conversation:
   User: ...
@@ -35,6 +41,7 @@ The tool will return only the enhanced prompt text.
 **Best Practices**:
 - **Auto-trigger on vague inputs**: If the user's message is short, ambiguous, or lacks specifics (e.g. "fix bug", "add feature", "make it better"), **automatically call the enhance_prompt tool** before doing any work.
 - Include last 8-12 messages as history by default. Claude Code can summarize or select relevant turns if context is too long.
+- For follow-up prompts like "那这个怎么改" or "继续", include what the assistant already read and concluded. The goal is to preserve continuity from the prior code-reading work.
 - Always surface the **before/after** for human review (transparency is key, just like Kilo Code's ✨ button).
 - Present what was improved (e.g. "Added specific file references and success criteria from recent discussion").
 - Do **not** execute the original vague prompt directly.
@@ -52,7 +59,7 @@ The tool will return only the enhanced prompt text.
 User types: "fix the auth"
 Claude (following this skill):
 1. Detects vague prompt.
-2. Assembles context: recent messages about login 401 + current file src/auth/login.py + selected function.
+2. Assembles context: recent messages about login 401 + code facts from src/auth/login.py and src/session.py + current file + selected function.
 3. Calls enhance_prompt tool with draft + full context.
 4. Gets improved prompt.
 5. Shows user: 
@@ -66,7 +73,14 @@ Claude (following this skill):
 **Tool Usage (via MCP)**:
 Call `enhance_prompt` with:
 - `draft`: The user's raw input.
-- `context`: Concatenated relevant history + editor context. Example format:
+- Prefer structured fields when available:
+  - `conversation`
+  - `code_facts`
+  - `task_state`
+  - `current_file`
+  - `selected_code`
+  - `user_preferences`
+- Use `context` as a fallback free-form string. Example format:
   ```
   Recent conversation (last turns):
   User: ...

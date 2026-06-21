@@ -116,14 +116,29 @@ Claude 如果遵守 skill，应该会先调用增强工具。
 帮我修 bug
 ```
 
-### 方式三：手动传上下文（效果最好）
+### 方式三：传入结构化上下文（效果最好）
 
-你可以自己构造好上下文后让 Claude 调用：
+你可以让 Claude Code 把下一轮问题和前面已经读过的代码事实一起传给工具：
 
 ```
-调用 enhance_prompt 工具，draft 是 "add dashboard"，context 是下面这些：
-[粘贴最近对话 + 当前文件 + 选中代码]
+调用 enhance_prompt 工具，参数如下：
+draft: 那这个怎么改
+conversation:
+- role: assistant
+  content: 已读取 src/auth.py 和 src/session.py，定位到 validate_session 可能返回 401。
+code_facts:
+- path: src/session.py
+  summary: validate_session 在 token 查找失败时返回 401 Unauthorized
+  symbols: [validate_session]
+task_state: 正在定位有效用户登录后仍返回 401 的原因
+current_file: src/session.py
+selected_code: def validate_session(token): ...
+user_preferences:
+- 先说明根因，再给最小修改方案
+- 修改后补充测试
 ```
+
+这对应的是「用户的新问题 + 最近对话 + Claude Code 已经读过/总结过的代码信息」一起增强，而不是只润色一句孤立的话。
 
 ---
 
@@ -151,6 +166,7 @@ server.py 现在会通过 enhance 进行真实 LLM 增强。
 
 - **自动触发**：对模糊输入（"fix bug", "add feature" 等）自动调用工具。
 - **完整历史上下文**：默认带最近 8-12 条消息，Claude 负责组装。
+- **已读代码事实**：把前面读到的文件、函数、错误路径、结论以 `code_facts` 传入。
 - **透明 Review**：必须展示 before/after + 改动总结给用户编辑。
 - **Editor 上下文**：支持传入当前文件、选中代码。
 - **结构化具体化**：增强后的 prompt 必须包含具体文件、要求、成功标准。
