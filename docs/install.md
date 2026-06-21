@@ -40,6 +40,18 @@ python3 mcp-server/server.py
 ```
 ( it waits for stdio JSON-RPC).
 
+Run the local HTTP API for a Codex-style `优化输入` button:
+
+```bash
+python3 mcp-server/http_server.py --host 127.0.0.1 --port 8765
+```
+
+The button/client can then POST the current draft plus structured context to:
+
+```text
+http://127.0.0.1:8765/enhance
+```
+
 Use the tool from chat: "enhance this prompt: fix the bug" (Claude should discover and use the tool).
 
 For follow-up prompts during a coding task, pass structured context when possible:

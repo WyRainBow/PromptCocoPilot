@@ -52,6 +52,18 @@
 python3 examples/enhance-next-turn.py examples/next-turn-context.json --print-context
 ```
 
+## Codex「优化输入」按钮接口
+
+仓库本身不能直接修改 Codex 桌面客户端的输入栏，但已经提供了按钮可调用的本地 HTTP API：
+
+```bash
+python3 mcp-server/http_server.py --host 127.0.0.1 --port 8765
+```
+
+Codex 侧如果支持输入栏 action，可以新增一个「优化输入」按钮，让它读取当前输入框内容和上下文，POST 到 `http://127.0.0.1:8765/enhance`，再把返回的 `enhanced` 写回输入框供用户审阅。
+
+详见 `docs/codex-button-integration.md`。
+
 ## 安装（Claude Code）
 
 1. 启动 MCP Server
