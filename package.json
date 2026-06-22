@@ -1,0 +1,12 @@
+{
+  "name": "prompt-coco-pilot",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:node": "node --test qoder-ui/test/*.test.js",
+    "qoder:optimize-input": "node qoder-ui/bin/qoder-optimize-input.js",
+    "qoder:install-agent": "node qoder-ui/bin/qoder-optimize-input.js install-agent qoder",
+    "qoder:uninstall-agent": "node qoder-ui/bin/qoder-optimize-input.js uninstall-agent qoder"
+  }
+}
