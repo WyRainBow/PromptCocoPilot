@@ -49,6 +49,7 @@ def send(message: dict):
 def handle_enhance_prompt_tool(arguments: dict[str, Any]) -> str:
     draft = arguments.get("draft", "")
     context = arguments.get("context") or ""
+    structured_output = bool(arguments.get("structured_output", False))
 
     structured_context_keys = {
         "conversation",
@@ -57,6 +58,8 @@ def handle_enhance_prompt_tool(arguments: dict[str, Any]) -> str:
         "current_file",
         "selected_code",
         "user_preferences",
+        "project_summary",
+        "workspace_files",
     }
     if any(key in arguments for key in structured_context_keys):
         packaged_context = assemble_enhancement_context(
@@ -65,7 +68,16 @@ def handle_enhance_prompt_tool(arguments: dict[str, Any]) -> str:
         )
         context = f"{context}\n\n{packaged_context}".strip() if context else packaged_context
 
-    return enhance_prompt(draft, context or None)
+    enhanced = enhance_prompt(draft, context or None)
+
+    if structured_output:
+        import json as _json
+        return _json.dumps({
+            "original": draft,
+            "enhanced": enhanced,
+            "context_used": bool(context),
+        }, ensure_ascii=False)
+    return enhanced
 
 def main():
     # Handshake / init (basic)
@@ -160,6 +172,19 @@ def main():
                                         "type": "array",
                                         "description": "User constraints or style preferences to carry into the enhanced prompt.",
                                         "items": {"type": "string"}
+                                    },
+                                    "project_summary": {
+                                        "type": "string",
+                                        "description": "High-level description of the project: tech stack, main modules, architecture. Equivalent to Kilo Code's workspace summary. Helps the enhancer add project-specific context."
+                                    },
+                                    "workspace_files": {
+                                        "type": "array",
+                                        "description": "Lightweight list of relevant file paths in the project (up to 40 shown). Gives the enhancer a sense of codebase structure.",
+                                        "items": {"type": "string"}
+                                    },
+                                    "structured_output": {
+                                        "type": "boolean",
+                                        "description": "If true, return JSON with {original, enhanced, context_used} instead of plain text."
                                     }
                                 },
                                 "required": ["draft"]
