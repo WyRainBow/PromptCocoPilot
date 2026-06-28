@@ -29,6 +29,7 @@ export function parseBindingPayload(params) {
   if (payload.requestId != null) parsed.requestId = payload.requestId;
   if (payload.draft != null) parsed.draft = String(payload.draft);
   if (payload.context != null) parsed.context = String(payload.context);
+  if (payload.source != null) parsed.source = String(payload.source);
   if (payload.beforeLength != null) parsed.beforeLength = payload.beforeLength;
   if (payload.afterLength != null) parsed.afterLength = payload.afterLength;
   if (payload.message != null) parsed.message = payload.message;
@@ -104,7 +105,8 @@ async function handleOptimizeRequest(client, payload) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         draft: payload.draft,
-        context: payload.context
+        context: payload.context,
+        ...(payload.source ? { source: payload.source } : {})
       })
     });
     const result = await response.json();

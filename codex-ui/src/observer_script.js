@@ -163,10 +163,17 @@ export function createOptimizeInputObserverScript(bindingName = 'promptCocoPilot
   }
 
   function visibleContext() {
-    const text = (document.body?.innerText || '')
+    const raw = (document.body?.innerText || '')
       .replace(/\\n{3,}/g, '\\n\\n')
       .trim();
-    return text.slice(Math.max(0, text.length - 6000));
+    const MAX = 6000;
+    if (raw.length <= MAX) return raw;
+    // head + tail, not pure tail: keep the original task definition / setup
+    // (top of the conversation) AND the most recent messages, matching the
+    // structured path's head/tail behavior so long chats don't lose intent.
+    const head = Math.floor(MAX * 0.6);
+    const tail = MAX - head;
+    return raw.slice(0, head).trim() + '\\n…[truncated]…\\n' + raw.slice(-tail).trim();
   }
 
   function isFormInputElement(input) {
@@ -302,7 +309,8 @@ export function createOptimizeInputObserverScript(bindingName = 'promptCocoPilot
         type: 'optimize-request',
         requestId,
         draft,
-        context: 'Visible Codex context:\\n' + visibleContext(),
+        context: 'Visible Codex context (button path, head+tail truncated):\\n' + visibleContext(),
+        source: 'ui-button',
         beforeLength: draft.length,
         capturedAt: Date.now()
       };

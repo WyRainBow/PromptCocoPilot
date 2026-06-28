@@ -46,6 +46,30 @@ except ImportError:
 def send(message: dict):
     print(json.dumps(message), flush=True)
 
+
+def _clean_button_context(text: str) -> str:
+    """Lightly denoise button-path context (raw document.body.innerText).
+
+    Collapses runs of blank lines and drops very short noise lines (single
+    chars / stray UI labels) without touching real prose. Keeps it cheap so the
+    fast rewriter stays low-latency.
+    """
+    import re
+
+    lines = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        # Drop obvious UI-chrome fragments: 1-2 char tokens, pure punctuation.
+        if len(line) <= 2 or not any(ch.isalnum() or "一" <= ch <= "鿿" for ch in line):
+            continue
+        lines.append(line)
+    cleaned = "\n".join(lines)
+    # Collapse 3+ blank-line runs that may have survived (already none, but be safe)
+    return re.sub(r"\n{3,}", "\n\n", cleaned).strip()
+
+
 def handle_enhance_prompt_tool(arguments: dict[str, Any]) -> str:
     draft = arguments.get("draft", "")
     context = arguments.get("context") or ""
@@ -67,6 +91,11 @@ def handle_enhance_prompt_tool(arguments: dict[str, Any]) -> str:
             prompt_context_from_dict(arguments),
         )
         context = f"{context}\n\n{packaged_context}".strip() if context else packaged_context
+
+    # Button-path context is raw document.body.innerText — UI chrome (menus,
+    # toolbars) adds noise. Lightly clean it so the rewriter isn't distracted.
+    if arguments.get("source") == "ui-button" and context:
+        context = _clean_button_context(context)
 
     enhanced = enhance_prompt(draft, context or None)
 
