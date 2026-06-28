@@ -45,7 +45,10 @@ def test_assemble_packages_all_fields():
 
     assert "Draft prompt:\n那这个怎么改" in packaged
     assert "Recent conversation" in packaged
-    assert "assistant: 我读取了 auth.py" in packaged
+    # With max_messages=2 the first-message task definition is pinned, so the
+    # most recent message + the original task goal are kept (middle msg dropped).
+    assert "帮我看看登录模块这个接口是什么" in packaged
+    assert "那这个怎么改" in packaged
     assert "Code facts already gathered" in packaged
     assert "src/auth.py" in packaged
     assert "login, create_session" in packaged
@@ -145,6 +148,28 @@ def test_assemble_truncates_long_messages_keeping_tail():
     assert "IMPORTANT CONCLUSION" in packaged
 
 
+def test_first_message_task_definition_preserved_in_long_conversation():
+    # The original task goal is in message #1; with a long conversation the
+    # tail-only slice would drop it. We pin the first message so intent survives.
+    goal = "TASK_GOAL_FIRST_MESSAGE"
+    messages = [ConversationMessage("user", goal)] + [
+        ConversationMessage("assistant", f"filler reply number {i}") for i in range(20)
+    ]
+    context = PromptContext(conversation=messages)
+    packaged = assemble_enhancement_context("那这个怎么改", context, max_messages=5)
+    assert goal in packaged  # first message always kept
+
+
+def test_estimate_tokens_cjk_friendly():
+    from context_packaging import _estimate_tokens
+    # Pure CJK: ~1 token per char (not 4 chars/token)
+    assert _estimate_tokens("你好世界") == 4
+    # ASCII: ~4 chars per token
+    assert _estimate_tokens("hello world!!") == 3  # 13 chars // 4
+    # Mixed: CJK counted 1:1, ASCII at 4:1
+    assert _estimate_tokens("你好hello") == 2 + 1  # 2 CJK + (5//4=1)
+
+
 if __name__ == "__main__":
     test_assemble_packages_all_fields()
     test_smart_truncation_keeps_head_and_tail()
@@ -156,4 +181,6 @@ if __name__ == "__main__":
     test_workspace_files_capped_at_40()
     test_budget_enforcement_trims_conversation()
     test_assemble_truncates_long_messages_keeping_tail()
+    test_first_message_task_definition_preserved_in_long_conversation()
+    test_estimate_tokens_cjk_friendly()
     print("All context packaging tests passed.")

@@ -32,10 +32,11 @@ class PromptContext:
     workspace_files: Sequence[str] = field(default_factory=tuple)
 
 
-# Total context budget sent to the rewriter (chars). Keeps small models safe.
-# Rough mapping: 1 token ≈ 4 chars; most fast models have 8k-32k context.
-# We leave the budget at ~6k chars for the context portion (rewriter has its
-# own system prompt + the draft on top of this).
+# Context budget sent to the rewriter. Unit = approximate TOKENS, not chars.
+# Calibrated for Chinese / mixed text: CJK ≈ 1 token/char, ASCII/code ≈ 4 chars/token
+# (real CJK ratio is ~1.5-2 chars/token, so this estimate errs on the safe side).
+# The old "1 token ≈ 4 chars" mapping over-counted Chinese by ~2x and either wasted
+# half the window or risked overflow; see _estimate_tokens for the real calc.
 DEFAULT_CONTEXT_BUDGET = 6_000
 
 
@@ -50,6 +51,17 @@ def _truncate_smart(text: str, max_chars: int) -> str:
     head = int(max_chars * 0.6)
     tail = max_chars - head
     return text[:head].rstrip() + "\n…[truncated]…\n" + text[-tail:].lstrip()
+
+
+def _estimate_tokens(text: str) -> int:
+    """Rough token estimate calibrated for Chinese / mixed text.
+
+    CJK chars ≈ 1 token each; ASCII/code ≈ ~4 chars/token. This replaces the old
+    "1 token ≈ 4 chars" assumption, which over-counted Chinese by ~2x.
+    """
+    cjk = sum(1 for ch in text if "一" <= ch <= "鿿")
+    non_cjk = len(text) - cjk
+    return cjk + (non_cjk // 4)
 
 
 def _format_lines(title: str, lines: Iterable[str]) -> str:
@@ -89,10 +101,48 @@ def assemble_enhancement_context(
 
     Improvements over v1:
     - Smart truncation (head+tail) so AI reply conclusions aren't lost.
+    - First-message task definition is always preserved (head + recent tail),
+      so long conversations don't lose the original goal.
     - code_facts deduplication by file path.
     - project_summary and workspace_files fields (Kilo Code gap filler).
-    - Total context budget cap to keep small-model context windows safe.
+    - Token-budget cap calibrated for Chinese/mixed text (_estimate_tokens),
+      enforced iteratively with a hard-truncation fallback so it never overflows
+      even when non-conversation sections alone exceed the budget.
     """
+    assembled = _assemble_with_cap(
+        draft, context, max_messages, max_chars_per_message, max_selected_code_chars
+    )
+
+    # Iterative budget enforcement. We only trim the conversation section
+    # (other sections aren't message-sized), so iterate a bounded number of
+    # times and stop when we either fit or hit the per-message floor.
+    cap = max_chars_per_message
+    for _ in range(4):
+        est = _estimate_tokens(assembled)
+        if est <= context_budget or not context.conversation or cap <= 80:
+            break
+        cap = max(80, int(cap * (context_budget / est) * 0.8))
+        assembled = _assemble_with_cap(
+            draft, context, max_messages, cap, max_selected_code_chars
+        )
+
+    # Hard fallback: if non-conversation content alone exceeds the budget,
+    # the loop above cannot shrink it further — truncate the whole payload
+    # rather than risk overflowing a small-model window.
+    if _estimate_tokens(assembled) > int(context_budget * 1.2):
+        assembled = _truncate_smart(assembled, context_budget * 4)
+
+    return assembled
+
+
+def _assemble_with_cap(
+    draft: str,
+    context: PromptContext,
+    max_messages: int,
+    max_chars_per_message: int,
+    max_selected_code_chars: int,
+) -> str:
+    """Assemble the context payload with a given per-message cap (no budget loop)."""
     parts: list[str] = [f"Draft prompt:\n{draft.strip()}"]
 
     # Project-level summary (Kilo Code workspace description equivalent)
@@ -100,18 +150,25 @@ def assemble_enhancement_context(
         parts.append(f"Project context:\n{context.project_summary.strip()}")
 
     if context.conversation:
-        recent = context.conversation[-max_messages:]
-        parts.append(
-            _format_lines(
-                "Recent conversation",
-                (
-                    f"{msg.role}: "
-                    f"{_truncate_smart(msg.content.strip(), max_chars_per_message)}"
-                    for msg in recent
-                    if msg.content.strip()
-                ),
+        msgs = [m for m in context.conversation if m.content.strip()]
+        if msgs:
+            # Keep the original task definition (first message) PLUS the most
+            # recent messages. Pure tail-only truncation loses the initial goal
+            # in long conversations; pinning the first message preserves intent.
+            if len(msgs) > max_messages:
+                recent = [msgs[0]] + msgs[-(max_messages - 1):]
+            else:
+                recent = msgs
+            parts.append(
+                _format_lines(
+                    "Recent conversation",
+                    (
+                        f"{msg.role}: "
+                        f"{_truncate_smart(msg.content.strip(), max_chars_per_message)}"
+                        for msg in recent
+                    ),
+                )
             )
-        )
 
     deduped_facts = _dedup_code_facts(context.code_facts)
     if deduped_facts:
@@ -159,23 +216,7 @@ def assemble_enhancement_context(
         suffix = f"\n  … and {len(context.workspace_files) - 40} more" if len(context.workspace_files) > 40 else ""
         parts.append(_format_lines("Workspace files (sample)", ["\n".join(f"  {f}" for f in shown) + suffix]))
 
-    assembled = "\n\n".join(part for part in parts if part)
-
-    # Budget enforcement: if over budget, progressively trim the conversation section
-    if len(assembled) > context_budget and context.conversation:
-        # Re-assemble with a tighter per-message cap
-        ratio = context_budget / len(assembled)
-        tighter_cap = max(80, int(max_chars_per_message * ratio * 0.8))
-        return assemble_enhancement_context(
-            draft,
-            context,
-            max_messages=max_messages,
-            max_chars_per_message=tighter_cap,
-            max_selected_code_chars=max_selected_code_chars,
-            context_budget=context_budget,
-        )
-
-    return assembled
+    return "\n\n".join(part for part in parts if part)
 
 
 def prompt_context_from_dict(raw: dict) -> PromptContext:
