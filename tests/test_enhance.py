@@ -28,8 +28,10 @@ def test_enhance_with_context():
     assert "add test" in result or "auth.py" in result or "context" in result.lower()
 
 def test_instruction_is_strict():
-    assert "rewrite" in INSTRUCTION.lower()
-    assert "never as a request to answer" in INSTRUCTION.lower()
+    assert "改写" in INSTRUCTION
+    assert "不要回答" in INSTRUCTION
+    assert "中文" in INSTRUCTION
+    assert "结构化" in INSTRUCTION
 
 def test_enhance_next_prompt_passes_packaged_context_to_rewriter():
     captured = {}

@@ -188,6 +188,13 @@ export function createOptimizeInputObserverScript(bindingName = 'promptCocoPilot
   }
 
   function selectAllInEditable(input) {
+    input.focus();
+    // execCommand('selectAll') lets the editor (e.g. ProseMirror) select through
+    // its own model; fall back to a DOM range only if it throws.
+    try {
+      document.execCommand('selectAll');
+      return;
+    } catch {}
     const range = document.createRange();
     range.selectNodeContents(input);
     const selection = window.getSelection();
@@ -203,20 +210,27 @@ export function createOptimizeInputObserverScript(bindingName = 'promptCocoPilot
       setNativeValue(input, text);
       return true;
     }
-    // contenteditable / ProseMirror: select all, then insert via execCommand so
-    // the editor's own input handling observes the change.
+    // contenteditable / ProseMirror: mutating the DOM directly gets overwritten
+    // by the editor's internal state (a previous version set textContent, which
+    // ProseMirror then wiped back to empty). Drive the editor through real input
+    // events instead: select all, then insertText; if that doesn't take, fall
+    // back to a synthetic paste event, which ProseMirror handles via its plugin.
     selectAllInEditable(input);
     let inserted = false;
     try { inserted = document.execCommand('insertText', false, text); } catch {}
-    if (!inserted || (input.innerText || '').trim() !== text.trim()) {
-      input.textContent = text;
-      input.dispatchEvent(new InputEvent('input', {
+    if (inserted && (input.innerText || '').trim()) return true;
+    try {
+      const dataTransfer = new DataTransfer();
+      dataTransfer.setData('text/plain', text);
+      input.dispatchEvent(new ClipboardEvent('paste', {
         bubbles: true,
-        inputType: 'insertText',
-        data: text
+        cancelable: true,
+        clipboardData: dataTransfer
       }));
+      return true;
+    } catch {
+      return false;
     }
-    return true;
   }
 
   function diagnostic(type, extra = {}) {
