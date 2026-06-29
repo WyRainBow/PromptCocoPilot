@@ -466,15 +466,16 @@ class Api:
         self._window = window
 
     def toggle_expand(self, expanded: bool) -> None:
-        """Resize + dock into the notch (top-center of current screen)."""
+        """Resize + dock into the notch (top-center) via pywebview move()."""
         if not self._window:
             return
+        sw, _ = _screen_size()
         if expanded:
             self._window.resize(380, 300)
-            _dock_to_notch(380, 300)
+            self._window.move((sw - 380) // 2, 0)
         else:
             self._window.resize(_NOTCH_W, _NOTCH_H)
-            _dock_to_notch(_NOTCH_W, _NOTCH_H)
+            self._window.move((sw - _NOTCH_W) // 2, 0)
 
     def enhance(self, draft: str) -> dict:
         payload: dict = {'draft': draft}
@@ -617,9 +618,6 @@ def run():
         frameless=True,
     )
     api.set_window(window)
-    # After load, precisely dock to the notch via native cocoa (correct across
-    # multi-display setups, unlike pywebview's move()).
-    window.events.loaded += lambda: _dock_to_notch(_NOTCH_W, _NOTCH_H)
     webview.start(debug=False)
 
 
