@@ -130,6 +130,19 @@ textarea:focus { border-color: var(--accent); }
 #status { font-size: 10px; color: var(--muted); min-height: 13px; display: flex; align-items: center; gap: 4px; }
 #status.err { color: var(--red); }
 #status.ok  { color: var(--green); }
+
+.field { position: relative; }
+.field textarea { padding-right: 30px; }
+.clear-btn {
+  position: absolute; top: 5px; right: 5px;
+  width: 20px; height: 20px; border-radius: 10px;
+  background: rgba(255,255,255,0.08); border: none;
+  color: var(--muted); cursor: pointer; font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2; opacity: 0; transition: opacity .15s, background .15s;
+}
+.field:hover .clear-btn { opacity: 1; }
+.clear-btn:hover { background: rgba(255,255,255,0.18); color: var(--text); }
 </style>
 </head>
 <body>
@@ -153,13 +166,19 @@ textarea:focus { border-color: var(--accent); }
     <button class="btn-xs" onclick="refreshSessions()">↻</button>
   </div>
 
-  <textarea id="draft" placeholder="输入你想发送给 Claude 的草稿…"></textarea>
+  <div class="field">
+    <textarea id="draft" placeholder="输入你想发送给 Claude 的草稿…"></textarea>
+    <button class="clear-btn" onclick="clearDraft()" title="清空草稿">✕</button>
+  </div>
 
   <button class="btn btn-primary" id="enhance-btn" onclick="enhance()">▶ 增强</button>
 
   <div id="status"></div>
 
-  <textarea id="result" readonly placeholder="增强结果会显示在这里…"></textarea>
+  <div class="field">
+    <textarea id="result" readonly placeholder="增强结果会显示在这里…"></textarea>
+    <button class="clear-btn" onclick="clearResult()" title="清空结果">✕</button>
+  </div>
 
   <button class="btn btn-secondary" id="copy-btn" disabled onclick="copyResult()">复制结果</button>
 </div>
@@ -251,6 +270,18 @@ async function switchSession() {
       $('bar-text').textContent = cwd.split('/').pop();
     }
   } catch(e) { console.error(e); }
+}
+
+function clearDraft() {
+  $('draft').value = '';
+  $('draft').focus();
+}
+
+function clearResult() {
+  $('result').value = '';
+  _enhanced = '';
+  $('copy-btn').disabled = true;
+  const s = $('status'); if (s) { s.textContent = ''; s.className = ''; }
 }
 
 async function copyResult() {
