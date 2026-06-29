@@ -15,6 +15,10 @@
     "codex:uninstall-agent": "node codex-ui/bin/codex-optimize-input.js uninstall-agent",
     "claude:float": "python3 claude-ui/bin/claude-float.py",
     "claude:session": "python3 claude-ui/bin/claude-float.py session",
-    "claude:ui": "/opt/homebrew/bin/python3.12 claude-ui/bin/claude-webview.py"
+    "claude:ui": "/opt/homebrew/bin/python3.12 claude-ui/bin/claude-webview.py",
+    "claude:card": "/opt/homebrew/bin/python3.12 claude-ui/bin/claude-card.py",
+    "claude:drag": "/opt/homebrew/bin/python3.12 claude-ui/bin/claude-drag.py",
+    "claude:island:build": "bash claude-ui/swift/build.sh",
+    "claude:island": "claude-ui/swift/build/PromptCocoIsland"
   }
 }
