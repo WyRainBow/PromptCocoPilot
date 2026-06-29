@@ -93,7 +93,7 @@ final class AppState: ObservableObject {
     @Published var expanded = false
     @Published var notch = NotchInfo.fallback
     @Published var sessions: [SessionInfo] = []
-    @Published var selectedCwd = ""
+    @Published var selectedId = ""
     @Published var preview: [PreviewItem] = []
     @Published var contextOpen = false
     @Published var sessionListOpen = false
@@ -131,8 +131,9 @@ final class AppState: ObservableObject {
     var canApply: Bool { !result.isEmpty }
     var contextCount: Int { preview.count }
     var sessionLabel: String {
-        sessions.first(where: { $0.cwd == selectedCwd })?.name ?? "优化输入"
+        sessions.first(where: { $0.id == selectedId })?.name ?? "优化输入"
     }
+    var selectedSession: SessionInfo? { sessions.first(where: { $0.id == selectedId }) }
 
     func collapse() {
         expanded = false
@@ -157,26 +158,28 @@ final class AppState: ObservableObject {
             let list = await Task.detached { SessionReader.list() }.value
             guard let self else { return }
             self.sessions = list
-            if self.sessions.first(where: { $0.cwd == self.selectedCwd }) == nil {
-                self.selectedCwd = self.sessions.first?.cwd ?? ""
+            if self.sessions.first(where: { $0.id == self.selectedId }) == nil {
+                self.selectedId = self.sessions.first?.id ?? ""
             }
             self.loadContext()
         }
     }
 
     /// Called when the picker changes.
-    func selectSession(_ cwd: String) {
-        selectedCwd = cwd
+    func selectSession(_ id: String) {
+        selectedId = id
         sessionListOpen = false
         loadContext()
     }
 
     private func loadContext() {
-        let cwd = selectedCwd
-        guard !cwd.isEmpty else { conversation = []; preview = []; return }
+        guard let s = selectedSession else { conversation = []; preview = []; return }
+        let logPath = s.logPath, agent = s.agent, id = s.id
         Task { [weak self] in
-            let ctx = await Task.detached { SessionReader.context(cwd: cwd) }.value
-            guard let self, self.selectedCwd == cwd else { return }
+            let ctx = await Task.detached {
+                SessionReader.context(logPath: logPath, agent: agent)
+            }.value
+            guard let self, self.selectedId == id else { return }
             self.conversation = ctx.turns
             self.preview = ctx.preview
         }

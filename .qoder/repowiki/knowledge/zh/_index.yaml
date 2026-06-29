@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-06-29T07:59:56Z"
+exported_at: "2026-06-29T11:59:58Z"
 modules:
     "":
-        dir_name: PromptCocoPilot 跨平台提示词增强编排中心
-        title: PromptCocoPilot 跨平台提示词增强编排中心
+        dir_name: PromptCocoPilot 上下文感知增强编排层
+        title: PromptCocoPilot 上下文感知增强编排层
         scope:
             - README.md
             - package.json
@@ -37,8 +37,8 @@ modules:
         depends_on: []
         related_to: []
     claude_ui:
-        dir_name: Claude Code 会话感知增强 UI 套件
-        title: Claude Code 会话感知增强 UI 套件
+        dir_name: 跨语言会话感知悬浮交互层
+        title: 跨语言会话感知悬浮交互层
         scope:
             - claude-ui/
         source_files: []
@@ -48,8 +48,8 @@ modules:
         related_to:
             - path: mcp_server
     claude_ui/swift:
-        dir_name: macOS 刘海屏原生增强卡片
-        title: macOS 刘海屏原生增强卡片
+        dir_name: 刘海屏原生增强卡片 (PromptCocoIsland)
+        title: 刘海屏原生增强卡片 (PromptCocoIsland)
         scope:
             - claude-ui/swift/
         source_files: []

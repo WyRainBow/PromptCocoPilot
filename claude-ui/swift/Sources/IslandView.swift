@@ -149,6 +149,7 @@ struct IslandRoot: View {
         HStack(spacing: 6) {
             Button { state.sessionListOpen.toggle() } label: {
                 HStack(spacing: 6) {
+                    if let s = state.selectedSession { agentBadge(s.agent) }
                     Text(currentSessionLabel)
                         .font(.system(size: 11))
                         .foregroundColor(Theme.text)
@@ -178,8 +179,21 @@ struct IslandRoot: View {
     }
 
     private var currentSessionLabel: String {
-        state.sessions.first(where: { $0.cwd == state.selectedCwd })?.menuLabel
+        state.selectedSession?.menuLabel
             ?? (state.sessions.isEmpty ? "无活跃会话" : "选择会话")
+    }
+
+    /// Small colored tag showing which agent a session belongs to.
+    private func agentBadge(_ agent: AgentKind) -> some View {
+        let tint = agent == .codex
+            ? Color(red: 0.40, green: 0.85, blue: 0.60)
+            : Color(red: 1.0, green: 0.72, blue: 0.38)
+        return Text(agent.rawValue)
+            .font(.system(size: 8, weight: .bold))
+            .foregroundColor(tint)
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(Capsule().fill(tint.opacity(0.16)))
     }
 
     // MARK: custom dark dropdown (replaces the light native Menu)
@@ -209,17 +223,20 @@ struct IslandRoot: View {
     }
 
     private func sessionRow(_ s: SessionInfo) -> some View {
-        let selected = s.cwd == state.selectedCwd
-        return Button { state.selectSession(s.cwd) } label: {
+        let selected = s.id == state.selectedId
+        return Button { state.selectSession(s.id) } label: {
             HStack(spacing: 7) {
                 Circle()
                     .fill(s.status == "busy" ? Color.red : Theme.muted.opacity(0.4))
                     .frame(width: 6, height: 6)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(s.name)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(Theme.text)
-                        .lineLimit(1)
+                    HStack(spacing: 5) {
+                        agentBadge(s.agent)
+                        Text(s.name)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(Theme.text)
+                            .lineLimit(1)
+                    }
                     Text("\(s.pathTail) · \(s.ago) · \(s.messageCount)条")
                         .font(.system(size: 9))
                         .foregroundColor(Theme.muted)
