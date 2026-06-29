@@ -35,8 +35,8 @@ HTML = r"""<!DOCTYPE html>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:       rgba(10, 10, 10, 0.92);
-  --border:   rgba(255, 255, 255, 0.08);
+  --bg:       rgba(10, 10, 10, 0.95);
+  --border:   rgba(255, 255, 255, 0.1);
   --accent:   #8b5cf6;
   --green:    #22c55e;
   --text:     #e2e8f0;
@@ -56,9 +56,37 @@ body {
   height: 100%;
   overflow: hidden;
   user-select: none;
+  -webkit-app-region: drag;
 }
 
-/* ── draggable card ── */
+button, .content { -webkit-app-region: no-drag; }
+
+/* ── collapsed state (island bar) ── */
+.island-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; min-height: 40px;
+  background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.island-left { display: flex; align-items: center; gap: 8px; }
+.island-icon { font-size: 14px; }
+.island-text { font-size: 11px; color: var(--muted); }
+.island-right { display: flex; align-items: center; gap: 6px; }
+
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+.dot.on  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+.btn-xs {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  border-radius: 12px; color: var(--muted); cursor: pointer;
+  font-size: 10px; padding: 2px 6px; transition: all 0.15s;
+}
+.btn-xs:hover { border-color: var(--accent); color: var(--text); }
+
+/* ── expanded content ── */
 .card {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -68,17 +96,17 @@ body {
   min-width: 300px;
   max-width: 380px;
   height: 100%;
-  display: flex;
+  display: none;
   flex-direction: column;
 }
 
-/* Drag handle - header */
+.card.show { display: flex; }
+
 .header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 12px 8px;
   border-bottom: 1px solid var(--border);
   cursor: grab;
-  -webkit-app-region: drag;
 }
 .header:active { cursor: grabbing; }
 
@@ -87,7 +115,6 @@ body {
 .close { background: none; border: none; font-size: 16px; color: var(--muted); cursor: pointer; padding: 0 6px; }
 .close:hover { color: var(--text); }
 
-/* Content area - NOT draggable */
 .content {
   flex: 1;
   padding: 10px 12px;
@@ -95,7 +122,6 @@ body {
   flex-direction: column;
   gap: 8px;
   overflow: hidden;
-  -webkit-app-region: no-drag;
 }
 
 .sess-info { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
@@ -131,14 +157,26 @@ textarea:focus { border-color: var(--accent); }
 </head>
 <body>
 
-<div class="card">
+<!-- Collapsed island bar -->
+<div class="island-bar" id="island-bar" onclick="expand()">
+  <div class="island-left">
+    <span class="island-icon">✨</span>
+    <span class="island-text" id="bar-text">Enhance</span>
+  </div>
+  <div class="island-right">
+    <span class="dot on"></span>
+  </div>
+</div>
+
+<!-- Expanded card content -->
+<div class="card" id="card">
   <div class="header">
     <div class="title">
       <span>✨</span>
       <span>Enhance</span>
       <span class="badge" id="badge">Fn+F1</span>
     </div>
-    <button class="close" onclick="closeCard()">×</button>
+    <button class="close" onclick="collapse()">◀</button>
   </div>
 
   <div class="content">
@@ -160,12 +198,22 @@ textarea:focus { border-color: var(--accent); }
 </div>
 
 <script>
-let _enhanced = '';
+let _enhanced = '', _expanded = false;
 
 const $ = id => document.getElementById(id);
 
-function closeCard() {
-  window.pywebview.api.close_window();
+async function expand() {
+  _expanded = true;
+  await window.pywebview.api.toggle_expand(true);
+  $('island-bar').style.display = 'none';
+  $('card').className = 'card show';
+}
+
+async function collapse() {
+  _expanded = false;
+  await window.pywebview.api.toggle_expand(false);
+  $('card').className = 'card';
+  $('island-bar').style.display = 'flex';
 }
 
 function setStatus(msg, cls = '') {
@@ -195,7 +243,7 @@ async function enhance() {
 
 function applyAndClose() {
   window.pywebview.api.replace_selection(_enhanced);
-  closeCard();
+  window.pywebview.api.close_window();
 }
 
 async function init() {
@@ -231,6 +279,14 @@ class Api:
     def close_window(self) -> None:
         if self._window:
             self._window.destroy()
+
+    def toggle_expand(self, expanded: bool) -> None:
+        """Toggle between collapsed (340x52) and expanded (340x300)."""
+        if self._window:
+            if expanded:
+                self._window.resize(340, 300)
+            else:
+                self._window.resize(340, 52)
 
     def enhance(self, draft: str) -> dict:
         payload: dict = {'draft': draft}
@@ -319,13 +375,13 @@ def run():
     api = Api()
     _ensure_server_ready(api)
 
-    # Position near top-center (like notch area)
+    # Start in collapsed state (340x52 island bar)
     window = webview.create_window(
         '✨ Enhance',
         html=HTML,
         js_api=api,
         width=340,
-        height=300,
+        height=52,        # collapsed height (island bar)
         resizable=False,
         on_top=True,
         background_color='#000000',
