@@ -41,10 +41,13 @@ enum SessionReader {
     private static var sessionsDir: URL { claudeDir.appendingPathComponent("sessions") }
     private static var projectsDir: URL { claudeDir.appendingPathComponent("projects") }
 
-    /// Claude Code replaces every non-[A-Za-z0-9._-] char with '-'.
+    /// Claude Code replaces every non-[A-Za-z0-9._-] char with '-'. Must be
+    /// ASCII-only: Swift's isLetter/isNumber are Unicode-aware and would keep
+    /// CJK chars (e.g. 开源工具), producing the wrong project-folder slug.
     private static func slug(_ cwd: String) -> String {
         String(cwd.map { c in
-            c.isLetter || c.isNumber || c == "." || c == "_" || c == "-" ? c : "-"
+            (c.isASCII && (c.isLetter || c.isNumber)) || c == "." || c == "_" || c == "-"
+                ? c : "-"
         })
     }
 
@@ -76,13 +79,21 @@ enum SessionReader {
                 updatedAt: (obj["updatedAt"] as? Double) ?? mtime
             ))
         }
-        // busy first, then most-recently-updated.
-        metas.sort { a, b in
-            let ra = a.status == "busy" ? 0 : 1
-            let rb = b.status == "busy" ? 0 : 1
-            return ra != rb ? ra < rb : a.updatedAt > b.updatedAt
-        }
+        // Rank by the most-recently-written conversation log — that's the session
+        // the user is actually in (busy-first picked background sessions instead).
+        metas.sort { lastActivity($0) > lastActivity($1) }
         return metas
+    }
+
+    /// When the session's JSONL was last written (falls back to the session JSON
+    /// timestamp). The active terminal's log is touched on every message.
+    private static func lastActivity(_ m: SessionMeta) -> Double {
+        if let url = jsonlURL(cwd: m.cwd, sessionId: m.sessionId),
+           let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+           let date = attrs[.modificationDate] as? Date {
+            return date.timeIntervalSince1970 * 1000
+        }
+        return m.updatedAt
     }
 
     private static func jsonlURL(cwd: String, sessionId: String) -> URL? {
@@ -93,10 +104,26 @@ enum SessionReader {
         return FileManager.default.fileExists(atPath: p.path) ? p : nil
     }
 
+    /// Read only the last `maxBytes` of a file — recent turns are at the end, so
+    /// we avoid loading multi-MB logs in full (the old code read the whole file).
+    private static func tailData(_ url: URL, maxBytes: Int) -> Data? {
+        guard let h = try? FileHandle(forReadingFrom: url) else { return nil }
+        defer { try? h.close() }
+        let size = (try? h.seekToEnd()) ?? 0
+        let start = size > UInt64(maxBytes) ? size - UInt64(maxBytes) : 0
+        try? h.seek(toOffset: start)
+        return try? h.readToEnd()
+    }
+
     private static func parse(_ url: URL, max: Int) -> [Turn] {
-        guard let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        let cap = 1_000_000   // 1MB tail comfortably covers the last ~20 turns
+        guard let data = tailData(url, maxBytes: cap) else { return [] }
+        let text = String(decoding: data, as: UTF8.self)   // lossy, never nil
+        var lines = text.split(separator: "\n", omittingEmptySubsequences: true)
+        // If the file was truncated, the first line is likely partial — drop it.
+        if data.count >= cap, !lines.isEmpty { lines.removeFirst() }
         var turns: [Turn] = []
-        for line in text.split(separator: "\n", omittingEmptySubsequences: true) {
+        for line in lines {
             guard
                 let obj = try? JSONSerialization.jsonObject(
                     with: Data(line.utf8)) as? [String: Any],
@@ -145,7 +172,7 @@ enum SessionReader {
                 cwd: m.cwd,
                 name: parts.last ?? "未知项目",
                 pathTail: tail,
-                ago: relativeTime(m.updatedAt),
+                ago: relativeTime(lastActivity(m)),   // consistent with the sort
                 messageCount: count,
                 status: m.status,
                 sid: String(m.sessionId.prefix(8))
@@ -158,8 +185,9 @@ enum SessionReader {
     static func context(cwd: String, max: Int = 20) -> (turns: [Turn], preview: [PreviewItem]) {
         for m in loadSessions() where m.cwd == cwd {
             guard let url = jsonlURL(cwd: m.cwd, sessionId: m.sessionId) else { continue }
-            let turns = parse(url, max: max)
-            let preview = turns.map {
+            let turns = parse(url, max: max)   // chronological — sent to enhance as-is
+            // Preview is newest-first for display only.
+            let preview = turns.reversed().map {
                 PreviewItem(role: $0.role,
                             snippet: String($0.content.prefix(60))
                                 .replacingOccurrences(of: "\n", with: " "),

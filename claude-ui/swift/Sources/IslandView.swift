@@ -5,14 +5,17 @@ import SwiftUI
 // into it (codex-island fills .black). Blue is used only as the accent.
 
 private enum Theme {
-    static let accent     = Color(red: 0.23, green: 0.51, blue: 0.96)   // #3b82f6
-    static let accentDeep = Color(red: 0.15, green: 0.39, blue: 0.92)   // #2563eb
-    static let bodyTint   = Color(red: 0.04, green: 0.06, blue: 0.13)   // dark navy (below the notch)
-    static let surface    = Color(red: 0.08, green: 0.11, blue: 0.19)
-    static let stroke     = Color(red: 0.23, green: 0.51, blue: 0.96).opacity(0.30)
-    static let text       = Color(red: 0.90, green: 0.93, blue: 0.99)
-    static let muted      = Color(red: 0.52, green: 0.58, blue: 0.70)
-    static let result     = Color(red: 0.55, green: 0.80, blue: 1.0)
+    static let accent     = Color(red: 0.30, green: 0.56, blue: 1.0)    // clean blue #4d8eff
+    static let accentDeep = Color(red: 0.18, green: 0.42, blue: 0.95)
+    // Near-black neutral so it merges with the notch and looks premium, not a
+    // saturated navy slab. Blue is the accent only.
+    static let bodyTint   = Color(red: 0.055, green: 0.06, blue: 0.075)
+    static let surface    = Color(red: 0.11, green: 0.12, blue: 0.14)
+    static let surfaceHi  = Color(red: 0.14, green: 0.15, blue: 0.17)
+    static let stroke     = Color.white.opacity(0.08)
+    static let text       = Color(red: 0.92, green: 0.93, blue: 0.95)
+    static let muted      = Color(red: 0.55, green: 0.58, blue: 0.64)
+    static let result     = Color(red: 0.62, green: 0.78, blue: 1.0)
 }
 
 struct IslandRoot: View {
@@ -26,8 +29,7 @@ struct IslandRoot: View {
         .background(background)
         .clipShape(islandShape)
         .ignoresSafeArea(.all)   // draw under the notch, not below it
-        .animation(.easeInOut(duration: 0.18), value: state.expanded)
-        .animation(.easeInOut(duration: 0.15), value: state.contextOpen)
+        .animation(.easeOut(duration: 0.16), value: state.contextOpen)
     }
 
     /// Square top (flush with the notch / screen edge), rounded bottom, squircle.
@@ -79,27 +81,27 @@ struct IslandRoot: View {
         }
         .frame(height: max(28, state.notch.height))
         .contentShape(Rectangle())
-        // Small movement = tap (toggle); larger = drag the card out of the notch.
-        .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { v in
-                    if abs(v.translation.width) > 4 || abs(v.translation.height) > 4 {
-                        state.dragBy(v.translation)
-                    }
-                }
-                .onEnded { v in
-                    if abs(v.translation.width) < 5 && abs(v.translation.height) < 5 {
-                        state.toggle()
-                    } else {
-                        state.dragEnd()
-                    }
-                }
-        )
+        // Double-click toggles. Dragging is handled by a controller-level NSEvent
+        // monitor (absolute mouse position) — a SwiftUI DragGesture jitters here
+        // because its translation is relative to the window that's being moved.
+        .onTapGesture(count: 2) { state.toggle() }
     }
 
     // MARK: expanded card body (below the notch)
 
     private var expandedBody: some View {
+        ZStack(alignment: .top) {
+            cardContent
+            if state.sessionListOpen {
+                sessionDropdown
+                    .padding(.horizontal, 13)
+                    .padding(.top, 36)   // just below the picker row
+                    .zIndex(10)
+            }
+        }
+    }
+
+    private var cardContent: some View {
         VStack(alignment: .leading, spacing: 9) {
             sessionPicker
             contextViewer
@@ -125,12 +127,13 @@ struct IslandRoot: View {
                     .frame(maxWidth: .infinity, alignment: .center)
             }
 
+            // Result is editable — tweak the enhanced text before / between applies.
             editor(text: $state.result,
-                   placeholder: "增强结果会显示在这里…",
-                   minHeight: 80, color: Theme.result, readOnly: true)
+                   placeholder: "增强结果会显示在这里（可编辑）…",
+                   minHeight: 80, color: Theme.result)
 
-            Button(action: state.applyAndClose) {
-                Text("✓ 应用并关闭").frame(maxWidth: .infinity)
+            Button(action: state.apply) {
+                Text("✓ 应用").frame(maxWidth: .infinity)
             }
             .buttonStyle(PillButton(kind: .secondary))
             .disabled(!state.canApply)
@@ -144,11 +147,7 @@ struct IslandRoot: View {
 
     private var sessionPicker: some View {
         HStack(spacing: 6) {
-            Menu {
-                ForEach(state.sessions) { s in
-                    Button(s.menuLabel) { state.selectSession(s.cwd) }
-                }
-            } label: {
+            Button { state.sessionListOpen.toggle() } label: {
                 HStack(spacing: 6) {
                     Text(currentSessionLabel)
                         .font(.system(size: 11))
@@ -158,13 +157,14 @@ struct IslandRoot: View {
                     Image(systemName: "chevron.down")
                         .font(.system(size: 8, weight: .bold))
                         .foregroundColor(Theme.muted)
+                        .rotationEffect(.degrees(state.sessionListOpen ? 180 : 0))
                 }
                 .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(fieldBg)
+                .contentShape(Rectangle())
             }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
+            .buttonStyle(.plain)
 
             Button(action: state.refreshSessions) {
                 Image(systemName: "arrow.clockwise")
@@ -180,6 +180,68 @@ struct IslandRoot: View {
     private var currentSessionLabel: String {
         state.sessions.first(where: { $0.cwd == state.selectedCwd })?.menuLabel
             ?? (state.sessions.isEmpty ? "无活跃会话" : "选择会话")
+    }
+
+    // MARK: custom dark dropdown (replaces the light native Menu)
+
+    private var sessionDropdown: some View {
+        ScrollView {
+            VStack(spacing: 2) {
+                if state.sessions.isEmpty {
+                    Text("无活跃会话")
+                        .font(.system(size: 11))
+                        .foregroundColor(Theme.muted)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                }
+                ForEach(state.sessions) { s in sessionRow(s) }
+            }
+            .padding(5)
+        }
+        .frame(maxHeight: 230)
+        .background(
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .fill(Theme.surfaceHi)
+                .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .stroke(Theme.stroke, lineWidth: 1))
+                .shadow(color: .black.opacity(0.55), radius: 14, y: 6)
+        )
+    }
+
+    private func sessionRow(_ s: SessionInfo) -> some View {
+        let selected = s.cwd == state.selectedCwd
+        return Button { state.selectSession(s.cwd) } label: {
+            HStack(spacing: 7) {
+                Circle()
+                    .fill(s.status == "busy" ? Color.red : Theme.muted.opacity(0.4))
+                    .frame(width: 6, height: 6)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(s.name)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(Theme.text)
+                        .lineLimit(1)
+                    Text("\(s.pathTail) · \(s.ago) · \(s.messageCount)条")
+                        .font(.system(size: 9))
+                        .foregroundColor(Theme.muted)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                if selected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundColor(Theme.accent)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 7)
+                    .fill(selected ? Theme.accent.opacity(0.18) : Color.clear)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: compressed-context viewer

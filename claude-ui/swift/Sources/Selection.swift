@@ -19,7 +19,7 @@ enum Selection {
         pb.clearContents()
         pb.setString(text, forType: .string)
         // Give the previous app a moment to regain focus before pasting.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { pressCmdV() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { pressCmdV() }
     }
 
     private static func pressCmdV() {
