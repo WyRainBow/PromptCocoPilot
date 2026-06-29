@@ -76,7 +76,11 @@ def _parse_conversation(jsonl_path: Path, max_messages: int) -> list[dict]:
                 continue
             text = text.strip()
             if text:
-                messages.append({'role': obj['type'], 'content': text})
+                messages.append({
+                    'role': obj['type'],
+                    'content': text,
+                    'ts': obj.get('timestamp', ''),
+                })
     except Exception:
         pass
     return messages[-max_messages:]

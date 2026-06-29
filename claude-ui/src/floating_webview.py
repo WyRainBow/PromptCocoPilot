@@ -35,6 +35,46 @@ def _screen_size():
         return 1512, 982  # fallback (MacBook Pro 14")
 
 
+def _dock_to_notch(w, h):
+    """Dock our window to top-center of its *own* screen (native cocoa).
+
+    Bypasses pywebview move(), which targets its internal `self.screen` and
+    lands on the wrong display in multi-monitor setups. We grab the window's
+    actual screen and use setFrameOrigin (cocoa bottom-left origin):
+        y = screen_top - h   →  flush with the top of THIS screen.
+    """
+    try:
+        from AppKit import NSApp, NSScreen, NSPoint
+        win = NSApp.keyWindow() or NSApp.mainWindow()
+        if not win:
+            for cand in NSApp.windows():
+                if cand.isVisible():
+                    win = cand
+                    break
+        if not win:
+            return False
+        screen = win.screen() or NSScreen.mainScreen()
+        sf = screen.frame()
+        x = sf.origin.x + (sf.size.width - w) / 2
+        y = sf.origin.y + sf.size.height - h   # flush with top
+        win.setFrameOrigin_(NSPoint(x, y))
+        return True
+    except Exception:
+        return False
+
+
+def _relative_time(ts_ms: float, now_ms: float) -> str:
+    """Human-readable relative time, e.g. '5分钟前'."""
+    diff = max(0, (now_ms - ts_ms) / 1000)
+    if diff < 60:
+        return '刚刚'
+    if diff < 3600:
+        return f'{int(diff // 60)}分钟前'
+    if diff < 86400:
+        return f'{int(diff // 3600)}小时前'
+    return f'{int(diff // 86400)}天前'
+
+
 # ── HTML / CSS / JS ─────────────────────────────────────────────────────────────
 
 HTML = r"""<!DOCTYPE html>
@@ -112,11 +152,21 @@ button, textarea, select, .no-drag { -webkit-app-region: no-drag; }
 
 .row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
 select {
-  background: var(--surface); color: var(--text);
+  appearance: none; -webkit-appearance: none;
+  background-color: var(--surface); color: var(--text);
   border: 1px solid var(--border); border-radius: 8px;
-  padding: 3px 8px; font-size: 11px; outline: none;
+  padding: 4px 26px 4px 10px; font-size: 11px; outline: none;
   flex: 1; cursor: pointer;
+  /* custom dropdown arrow (two CSS triangles) */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
 }
+select:hover { border-color: var(--accent); }
+select option { background: #1a1a1a; color: var(--text); }
 
 textarea {
   -webkit-user-select: text; user-select: text;
@@ -153,10 +203,36 @@ textarea:focus { border-color: var(--accent); }
   background: rgba(255,255,255,0.08); border: none;
   color: var(--muted); cursor: pointer; font-size: 11px;
   display: flex; align-items: center; justify-content: center;
-  z-index: 2; opacity: 0; transition: opacity .15s, background .15s;
+  z-index: 2; opacity: 0.4; transition: opacity .15s, background .15s;
 }
 .field:hover .clear-btn { opacity: 1; }
 .clear-btn:hover { background: rgba(255,255,255,0.18); color: var(--text); }
+
+/* ── compressed-context viewer ── */
+.ctx-section { margin-top: 2px; -webkit-app-region: no-drag; }
+.ctx-header {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; color: var(--muted); cursor: pointer; padding: 2px 0;
+}
+.ctx-header:hover { color: var(--text); }
+.ctx-count { margin-left: auto; }
+.ctx-list {
+  max-height: 92px; overflow-y: auto; display: none;
+  background: rgba(0,0,0,0.3); border-radius: 6px; padding: 3px 6px;
+}
+.ctx-list.show { display: block; }
+.ctx-item {
+  font-size: 10px; color: var(--muted); padding: 2px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex; gap: 4px; align-items: flex-start;
+}
+.ctx-item:last-child { border-bottom: none; }
+.ctx-role { flex-shrink: 0; }
+.ctx-snippet { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.ctx-ts { color: #4a4a5a; font-size: 9px; flex-shrink: 0; }
+.ctx-loading { font-size: 10px; color: var(--muted); padding: 4px; text-align: center; }
+.ctx-list::-webkit-scrollbar { width: 4px; }
+.ctx-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
 </style>
 </head>
 <body>
@@ -178,6 +254,15 @@ textarea:focus { border-color: var(--accent); }
       <option value="">加载中…</option>
     </select>
     <button class="btn-xs" onclick="refreshSessions()">↻</button>
+  </div>
+
+  <div class="ctx-section">
+    <div class="ctx-header" onclick="toggleCtx()">
+      <span>📂 压缩的上下文</span>
+      <span class="ctx-count" id="ctx-count">—</span>
+      <span id="ctx-arrow">▶</span>
+    </div>
+    <div class="ctx-list" id="ctx-list"></div>
   </div>
 
   <div class="field">
@@ -263,7 +348,9 @@ async function refreshSessions() {
     sessions.forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.cwd;
-      opt.textContent = `${s.name} · ${s.messages}`;
+      const busy = s.status === 'busy' ? '🔴 ' : '';
+      opt.textContent = `${busy}${s.name} · ${s.path_tail} · ${s.ago} · ${s.messages}条`;
+      opt.title = `${s.cwd}\nsid: ${s.sid} · ${s.status}`;  // hover 显示完整路径，区分同名
       select.appendChild(opt);
     });
     if (current && sessions.find(s => s.cwd === current)) {
@@ -278,12 +365,58 @@ async function refreshSessions() {
 async function switchSession() {
   const cwd = $('sess-select').value;
   if (!cwd) return;
+  // show compressing state immediately so the user sees the process
+  $('ctx-list').innerHTML = '<div class="ctx-loading">⏳ 正在压缩最近 12 条…</div>';
+  $('ctx-list').classList.add('show');
+  $('ctx-arrow').textContent = '▼';
+  $('ctx-count').textContent = '...';
   try {
-    await window.pywebview.api.select_session(cwd);
+    const info = await window.pywebview.api.select_session(cwd);
+    renderCtx(info.preview);
+    $('ctx-count').textContent = info.preview.length + ' 条已压缩';
     if (_expanded) {
       $('bar-text').textContent = cwd.split('/').pop();
     }
   } catch(e) { console.error(e); }
+}
+
+function renderCtx(preview) {
+  const list = $('ctx-list');
+  if (!preview || !preview.length) {
+    list.innerHTML = '<div class="ctx-loading">无上下文</div>';
+    return;
+  }
+  list.innerHTML = '';
+  preview.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'ctx-item';
+    const role = m.role === 'user' ? '👤' : '🤖';
+    div.innerHTML = `<span class="ctx-role">${role}</span>`;
+    const snip = document.createElement('span');
+    snip.className = 'ctx-snippet';
+    snip.textContent = m.snippet;          // textContent auto-escapes
+    div.appendChild(snip);
+    const ts = formatTs(m.ts);
+    if (ts) {
+      const t = document.createElement('span');
+      t.className = 'ctx-ts';
+      t.textContent = ts;
+      div.appendChild(t);
+    }
+    list.appendChild(div);
+  });
+}
+
+function formatTs(ts) {
+  if (!ts) return '';
+  try { return new Date(ts).toTimeString().slice(0, 5); } catch { return ''; }
+}
+
+function toggleCtx() {
+  const list = $('ctx-list');
+  const show = !list.classList.contains('show');
+  list.classList.toggle('show', show);
+  $('ctx-arrow').textContent = show ? '▼' : '▶';
 }
 
 function clearDraft() {
@@ -333,18 +466,15 @@ class Api:
         self._window = window
 
     def toggle_expand(self, expanded: bool) -> None:
-        """Resize + reposition. Collapsed docks into the notch (top-center)."""
+        """Resize + dock into the notch (top-center of current screen)."""
         if not self._window:
             return
-        sw, _sh = _screen_size()
         if expanded:
-            w, h = 380, 300
-            self._window.resize(w, h)
-            self._window.move((sw - w) // 2, 0)
+            self._window.resize(380, 300)
+            _dock_to_notch(380, 300)
         else:
-            # Collapse back into the notch area (top-center, flush with top)
             self._window.resize(_NOTCH_W, _NOTCH_H)
-            self._window.move((sw - _NOTCH_W) // 2, 0)
+            _dock_to_notch(_NOTCH_W, _NOTCH_H)
 
     def enhance(self, draft: str) -> dict:
         payload: dict = {'draft': draft}
@@ -389,8 +519,10 @@ class Api:
         subprocess.run(['pbcopy'], input=text.encode(), check=False)
 
     def list_sessions(self) -> list[dict]:
-        """List all active Claude Code sessions for manual selection."""
+        """List active sessions with disambiguation info (path/time) for同名项目."""
         from session_reader import _load_all_sessions, _find_jsonl, _parse_conversation
+        import time
+        now_ms = time.time() * 1000
         sessions = []
         for s in _load_all_sessions()[:10]:
             cwd = s.get('cwd', '')
@@ -402,18 +534,23 @@ class Api:
                 continue
             conv = _parse_conversation(jsonl_path, 12)
             name = cwd.split('/')[-1] if cwd else '未知项目'
-            status = s.get('status', '')
+            parts = [p for p in cwd.split('/') if p]
+            path_tail = '/'.join(parts[-2:]) if len(parts) >= 2 else cwd
+            updated = s.get('updatedAt') or 0
             sessions.append({
                 'cwd': cwd,
                 'name': name,
-                'status': status,
+                'status': s.get('status', ''),
                 'messages': len(conv),
                 'id': session_id,
+                'path_tail': path_tail,                  # disambiguates同名
+                'ago': _relative_time(updated, now_ms) if updated else '',
+                'sid': session_id[:8],
             })
         return sessions
 
     def select_session(self, cwd: str) -> dict:
-        """Load conversation for a specific session by cwd."""
+        """Load conversation for a session; return compressed-message preview."""
         from session_reader import _find_jsonl, _parse_conversation, _load_all_sessions
         for s in _load_all_sessions():
             if s.get('cwd') == cwd:
@@ -422,8 +559,20 @@ class Api:
                     conv = _parse_conversation(jsonl_path, 12)
                     self._conversation = conv
                     name = cwd.split('/')[-1] if cwd else '未知项目'
-                    return {'label': f'📍 {name}  ·  {len(conv)} 条对话', 'cwd': cwd}
-        return {'label': '未找到会话', 'cwd': ''}
+                    preview = [
+                        {
+                            'role': m.get('role', '?'),
+                            'snippet': (m.get('content', '') or '')[:60].replace('\n', ' '),
+                            'ts': m.get('ts', ''),
+                        }
+                        for m in conv
+                    ]
+                    return {
+                        'label': f'📍 {name}  ·  {len(conv)} 条对话',
+                        'cwd': cwd,
+                        'preview': preview,
+                    }
+        return {'label': '未找到会话', 'cwd': '', 'preview': []}
 
 
 # ── Server auto-start ───────────────────────────────────────────────────────────
@@ -468,6 +617,9 @@ def run():
         frameless=True,
     )
     api.set_window(window)
+    # After load, precisely dock to the notch via native cocoa (correct across
+    # multi-display setups, unlike pywebview's move()).
+    window.events.loaded += lambda: _dock_to_notch(_NOTCH_W, _NOTCH_H)
     webview.start(debug=False)
 
 
