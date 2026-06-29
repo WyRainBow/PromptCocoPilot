@@ -20,6 +20,20 @@ ENHANCE_URL = os.environ.get('ENHANCE_ENDPOINT', 'http://127.0.0.1:8765/enhance'
 _HERE  = os.path.dirname(os.path.abspath(__file__))
 _SERVER_PY = os.path.normpath(os.path.join(_HERE, '..', '..', 'mcp-server', 'http_server.py'))
 
+# Collapsed "notch" size — docks into the MacBook notch area (top-center, y=0).
+# 200x36 sits flush under the menu bar / notch like CodeIsland / Invoko.
+_NOTCH_W, _NOTCH_H = 200, 36
+
+
+def _screen_size():
+    """Return (width, height) of the main screen via pyobjc."""
+    try:
+        from AppKit import NSScreen
+        f = NSScreen.mainScreen().frame()
+        return int(f.size.width), int(f.size.height)
+    except Exception:
+        return 1512, 982  # fallback (MacBook Pro 14")
+
 
 # ── HTML / CSS / JS ─────────────────────────────────────────────────────────────
 
@@ -62,7 +76,7 @@ button, textarea, select, .no-drag { -webkit-app-region: no-drag; }
 /* ── island bar (collapsed state) ── */
 .island-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 12px; min-height: 40px;
+  padding: 6px 12px; height: 36px;
   background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
   border: 1px solid #2a2a2a;
   border-radius: 20px;
@@ -319,12 +333,18 @@ class Api:
         self._window = window
 
     def toggle_expand(self, expanded: bool) -> None:
-        """Dynamically resize window between collapsed and expanded states."""
-        if self._window:
-            if expanded:
-                self._window.resize(380, 300)
-            else:
-                self._window.resize(380, 52)
+        """Resize + reposition. Collapsed docks into the notch (top-center)."""
+        if not self._window:
+            return
+        sw, _sh = _screen_size()
+        if expanded:
+            w, h = 380, 300
+            self._window.resize(w, h)
+            self._window.move((sw - w) // 2, 0)
+        else:
+            # Collapse back into the notch area (top-center, flush with top)
+            self._window.resize(_NOTCH_W, _NOTCH_H)
+            self._window.move((sw - _NOTCH_W) // 2, 0)
 
     def enhance(self, draft: str) -> dict:
         payload: dict = {'draft': draft}
@@ -433,12 +453,15 @@ def run():
     api = Api()
     _ensure_server_ready(api)
 
+    sw, _sh = _screen_size()
     window = webview.create_window(
         '✨ 优化输入',
         html=HTML,
         js_api=api,
-        width=380,
-        height=52,        # collapsed height
+        width=_NOTCH_W,
+        height=_NOTCH_H,        # collapsed: docked into notch
+        x=(sw - _NOTCH_W) // 2, # centered horizontally
+        y=0,                    # flush with top (notch / menu bar)
         resizable=False,
         on_top=True,
         background_color='#000000',
