@@ -86,7 +86,7 @@ def _parse_conversation(jsonl_path: Path, max_messages: int) -> list[dict]:
     return messages[-max_messages:]
 
 
-def get_current_context(max_messages: int = 12) -> tuple:
+def get_current_context(max_messages: int = 20) -> tuple:
     """Return (conversation, cwd) for the most active Claude Code session.
 
     Tries sessions in order: busy first, then most-recently-updated.

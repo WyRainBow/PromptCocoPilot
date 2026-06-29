@@ -366,7 +366,7 @@ async function switchSession() {
   const cwd = $('sess-select').value;
   if (!cwd) return;
   // show compressing state immediately so the user sees the process
-  $('ctx-list').innerHTML = '<div class="ctx-loading">⏳ 正在压缩最近 12 条…</div>';
+  $('ctx-list').innerHTML = '<div class="ctx-loading">⏳ 正在压缩最近 20 条…</div>';
   $('ctx-list').classList.add('show');
   $('ctx-arrow').textContent = '▼';
   $('ctx-count').textContent = '...';
@@ -533,7 +533,7 @@ class Api:
             jsonl_path = _find_jsonl(s)
             if not jsonl_path:
                 continue
-            conv = _parse_conversation(jsonl_path, 12)
+            conv = _parse_conversation(jsonl_path, 20)
             name = cwd.split('/')[-1] if cwd else '未知项目'
             parts = [p for p in cwd.split('/') if p]
             path_tail = '/'.join(parts[-2:]) if len(parts) >= 2 else cwd
@@ -557,7 +557,7 @@ class Api:
             if s.get('cwd') == cwd:
                 jsonl_path = _find_jsonl(s)
                 if jsonl_path:
-                    conv = _parse_conversation(jsonl_path, 12)
+                    conv = _parse_conversation(jsonl_path, 20)
                     self._conversation = conv
                     name = cwd.split('/')[-1] if cwd else '未知项目'
                     preview = [
