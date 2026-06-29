@@ -44,6 +44,17 @@ class OptimizeInputHandler(BaseHTTPRequestHandler):
         self._send_cors_headers()
         self.end_headers()
 
+    def do_GET(self) -> None:
+        # Health check for server_alive() probe
+        if self.path == "/":
+            self.send_response(200)
+            self._send_cors_headers()
+            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(b"OK")
+            return
+        self._send_json(404, {"error": "not_found"})
+
     def do_POST(self) -> None:
         if self.path != "/enhance":
             self._send_json(404, {"error": "not_found"})

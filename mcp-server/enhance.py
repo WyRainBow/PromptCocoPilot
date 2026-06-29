@@ -25,9 +25,19 @@ RESUME_AGENT_ENV = Path("/Users/wy770/Resume-Agent/.env")
 MODEL = os.getenv("ENHANCE_MODEL", "deepseek-v4-flash")  # or qwen-plus etc.
 
 def _load_dashscope_key() -> str:
+    # 1. environment variable
     key = os.getenv("DASHSCOPE_API_KEY")
     if key:
         return key
+    # 2. current project .env (PromptCocoPilot/mcp-server/.env)
+    project_env = Path(__file__).parent / ".env"
+    if project_env.exists():
+        with open(project_env) as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("DASHSCOPE_API_KEY="):
+                    return line.split("=", 1)[1].strip()
+    # 3. fallback to Resume-Agent .env
     if RESUME_AGENT_ENV.exists():
         with open(RESUME_AGENT_ENV) as f:
             for line in f:

@@ -12,6 +12,9 @@
     "codex:probe": "node codex-ui/bin/codex-optimize-input.js probe",
     "codex:daemon": "node codex-ui/bin/codex-optimize-input.js",
     "codex:install-agent": "node codex-ui/bin/codex-optimize-input.js install-agent",
-    "codex:uninstall-agent": "node codex-ui/bin/codex-optimize-input.js uninstall-agent"
+    "codex:uninstall-agent": "node codex-ui/bin/codex-optimize-input.js uninstall-agent",
+    "claude:float": "python3 claude-ui/bin/claude-float.py",
+    "claude:session": "python3 claude-ui/bin/claude-float.py session",
+    "claude:ui": "/opt/homebrew/bin/python3.12 claude-ui/bin/claude-webview.py"
   }
 }
