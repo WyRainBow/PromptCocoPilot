@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: tests
+title: 提示词增强与上下文打包集成测试
+scope:
+    - tests/
+source_files: []
+depends_on: []
+related_to: []

@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: claude_ui
+title: Claude Code 会话感知增强 UI 套件
+scope:
+    - claude-ui/
+source_files: []
+depends_on: []
+related_to:
+    - path: mcp_server

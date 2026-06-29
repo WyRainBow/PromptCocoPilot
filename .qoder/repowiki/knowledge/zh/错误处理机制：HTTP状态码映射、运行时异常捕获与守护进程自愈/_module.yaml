@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: error_handling
+title: 错误处理机制：HTTP状态码映射、运行时异常捕获与守护进程自愈
+scope: []
+source_files:
+    - .qoder/repowiki/knowledge/zh/错误处理机制：HTTP状态码映射、运行时异常捕获与守护进程自愈/error_handling.md
+    - mcp-server/http_server.py
+    - mcp-server/server.py
+    - mcp-server/enhance.py
+    - qoder-ui/src/daemon.js
+depends_on: []
+related_to: []

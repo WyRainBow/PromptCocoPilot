@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: mcp_server
+title: MCP 提示词增强服务
+scope:
+    - mcp-server/
+source_files: []
+depends_on: []
+related_to:
+    - path: claude_ui
+    - path: codex_ui
+    - path: qoder_ui

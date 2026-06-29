@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: dependency_management
+title: 依赖管理策略：无锁文件与隐式环境依赖
+scope: []
+source_files:
+    - package.json
+    - .qoder/repowiki/knowledge/zh/依赖管理策略：无锁文件与隐式环境依赖/dependency_management.md
+    - mcp-server/enhance.py
+    - docs/install.md
+depends_on: []
+related_to: []

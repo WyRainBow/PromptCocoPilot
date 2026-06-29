@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: configuration_system
+title: 基于环境变量与宿主配置的轻量级配置体系
+scope: []
+source_files:
+    - .qoder/repowiki/knowledge/zh/基于环境变量与宿主配置的轻量级配置体系/configuration_system.md
+    - mcp-server/enhance.py
+    - mcp-server/http_server.py
+    - qoder-ui/src/daemon.js
+    - qoder-ui/src/qoder_paths.js
+depends_on: []
+related_to: []

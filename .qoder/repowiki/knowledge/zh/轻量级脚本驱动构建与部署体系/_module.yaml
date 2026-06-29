@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: build_system
+title: 轻量级脚本驱动构建与部署体系
+scope: []
+source_files:
+    - package.json
+    - docs/install.md
+    - qoder-ui/bin/qoder-optimize-input.js
+    - .qoder/repowiki/knowledge/zh/构建与部署体系/build_system.md
+depends_on: []
+related_to: []

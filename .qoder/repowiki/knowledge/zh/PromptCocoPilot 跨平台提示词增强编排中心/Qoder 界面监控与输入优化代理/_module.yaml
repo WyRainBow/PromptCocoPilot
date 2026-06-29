@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: qoder_ui
+title: Qoder 界面监控与输入优化代理
+scope:
+    - qoder-ui/
+source_files: []
+depends_on: []
+related_to:
+    - path: mcp_server

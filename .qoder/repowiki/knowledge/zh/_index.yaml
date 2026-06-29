@@ -1,0 +1,178 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: zh-CN
+branch: main
+nodes_managed: true
+exported_at: "2026-06-29T07:59:56Z"
+modules:
+    "":
+        dir_name: PromptCocoPilot 跨平台提示词增强编排中心
+        title: PromptCocoPilot 跨平台提示词增强编排中心
+        scope:
+            - README.md
+            - package.json
+            - .gitignore
+            - skill/
+        source_files: []
+        children:
+            - claude_ui
+            - codex_ui
+            - docs
+            - examples
+            - mcp_server
+            - qoder_ui
+            - tests
+        depends_on: []
+        related_to: []
+    build_system:
+        dir_name: 轻量级脚本驱动构建与部署体系
+        title: 轻量级脚本驱动构建与部署体系
+        scope: []
+        source_files:
+            - package.json
+            - docs/install.md
+            - qoder-ui/bin/qoder-optimize-input.js
+            - .qoder/repowiki/knowledge/zh/构建与部署体系/build_system.md
+        children: []
+        depends_on: []
+        related_to: []
+    claude_ui:
+        dir_name: Claude Code 会话感知增强 UI 套件
+        title: Claude Code 会话感知增强 UI 套件
+        scope:
+            - claude-ui/
+        source_files: []
+        children:
+            - claude_ui/swift
+        depends_on: []
+        related_to:
+            - path: mcp_server
+    claude_ui/swift:
+        dir_name: macOS 刘海屏原生增强卡片
+        title: macOS 刘海屏原生增强卡片
+        scope:
+            - claude-ui/swift/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    codex_ui:
+        dir_name: Codex UI 自动化与输入增强
+        title: Codex UI 自动化与输入增强
+        scope:
+            - codex-ui/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: mcp_server
+    configuration_system:
+        dir_name: 基于环境变量与宿主配置的轻量级配置体系
+        title: 基于环境变量与宿主配置的轻量级配置体系
+        scope: []
+        source_files:
+            - .qoder/repowiki/knowledge/zh/基于环境变量与宿主配置的轻量级配置体系/configuration_system.md
+            - mcp-server/enhance.py
+            - mcp-server/http_server.py
+            - qoder-ui/src/daemon.js
+            - qoder-ui/src/qoder_paths.js
+        children: []
+        depends_on: []
+        related_to: []
+    dependency_management:
+        dir_name: 依赖管理策略：无锁文件与隐式环境依赖
+        title: 依赖管理策略：无锁文件与隐式环境依赖
+        scope: []
+        source_files:
+            - package.json
+            - .qoder/repowiki/knowledge/zh/依赖管理策略：无锁文件与隐式环境依赖/dependency_management.md
+            - mcp-server/enhance.py
+            - docs/install.md
+        children: []
+        depends_on: []
+        related_to: []
+    docs:
+        dir_name: 上下文感知提示词增强方案
+        title: 上下文感知提示词增强方案
+        scope:
+            - docs/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    error_handling:
+        dir_name: 错误处理机制：HTTP状态码映射、运行时异常捕获与守护进程自愈
+        title: 错误处理机制：HTTP状态码映射、运行时异常捕获与守护进程自愈
+        scope: []
+        source_files:
+            - .qoder/repowiki/knowledge/zh/错误处理机制：HTTP状态码映射、运行时异常捕获与守护进程自愈/error_handling.md
+            - mcp-server/http_server.py
+            - mcp-server/server.py
+            - mcp-server/enhance.py
+            - qoder-ui/src/daemon.js
+        children: []
+        depends_on: []
+        related_to: []
+    examples:
+        dir_name: 提示词上下文组装与增强示例
+        title: 提示词上下文组装与增强示例
+        scope:
+            - examples/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    frontend_style:
+        dir_name: Qoder UI 注入式极简样式与运行时适配
+        title: Qoder UI 注入式极简样式与运行时适配
+        scope: []
+        source_files:
+            - qoder-ui/src/observer_script.js
+            - .qoder/repowiki/knowledge/zh/Qoder UI 注入式样式与极简按钮设计/frontend_style.md
+        children: []
+        depends_on: []
+        related_to: []
+    logging_system:
+        dir_name: 日志与输出机制：原生标准输出与统一前缀约定
+        title: 日志与输出机制：原生标准输出与统一前缀约定
+        scope: []
+        source_files:
+            - .qoder/repowiki/knowledge/zh/日志与输出机制/logging_system.md
+            - mcp-server/enhance.py
+            - mcp-server/http_server.py
+            - mcp-server/server.py
+            - qoder-ui/src/daemon.js
+        children: []
+        depends_on: []
+        related_to: []
+    mcp_server:
+        dir_name: MCP 提示词增强服务
+        title: MCP 提示词增强服务
+        scope:
+            - mcp-server/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: claude_ui
+            - path: codex_ui
+            - path: qoder_ui
+    qoder_ui:
+        dir_name: Qoder 界面监控与输入优化代理
+        title: Qoder 界面监控与输入优化代理
+        scope:
+            - qoder-ui/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: mcp_server
+    tests:
+        dir_name: 提示词增强与上下文打包集成测试
+        title: 提示词增强与上下文打包集成测试
+        scope:
+            - tests/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
