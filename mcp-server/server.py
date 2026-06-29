@@ -22,7 +22,7 @@ Usage in Claude Code:
 
 The server uses the core enhance logic with **real Dashscope** support (auto-loads DASHSCOPE_API_KEY from env or /Users/wy770/Resume-Agent/.env and calls the compatible endpoint for high-quality rewrite, just like Kilo Code's dedicated enhancer).
 
-The enhancement is performed inside the MCP server using a fast model (default: deepseek-v4-flash via Dashscope). This keeps it lightweight and separate from the main Claude session.
+The enhancement is performed inside the MCP server using a fast model (default: qwen-flash via Dashscope). This keeps it lightweight and separate from the main Claude session.
 """
 
 import sys

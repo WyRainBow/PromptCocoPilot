@@ -22,7 +22,7 @@ except ImportError:
 # ==================== Real Dashscope Support (for MCP server) ====================
 DASHSCOPE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 RESUME_AGENT_ENV = Path("/Users/wy770/Resume-Agent/.env")
-MODEL = os.getenv("ENHANCE_MODEL", "deepseek-v4-flash")  # or qwen-plus etc.
+MODEL = os.getenv("ENHANCE_MODEL", "qwen-flash")  # fast + good zh rewrite; override via ENHANCE_MODEL
 
 def _load_dashscope_key() -> str:
     # 1. environment variable
