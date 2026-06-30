@@ -146,7 +146,7 @@ struct IslandRoot: View {
         // RIGHT wing, both at menu-bar height (Invoko resident notch / CodeIsland).
         return HStack(spacing: 0) {
             RiveCloudView()
-                .frame(width: hovered ? 34 : 30, height: hovered ? 32 : 28)
+                .frame(width: hovered ? 40 : 36, height: hovered ? 32 : 31)
                 .padding(.leading, hovered ? 11 : 8)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
