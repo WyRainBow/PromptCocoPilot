@@ -534,9 +534,11 @@ final class IslandWindowController {
         // Preview is taller than the resident box to fit the glow halo below the notch.
         if state.dockPreview { return NSSize(width: 300, height: nh + 78) }
         if state.isDocked {
-            // Wide rounded bar (cloud left, dot right) but THIN — barely hangs below.
-            return state.notchHovered ? NSSize(width: 330, height: nh + 12)
-                                      : NSSize(width: 290, height: nh + 6)
+            // Flush menu-bar-height handle (Invoko resident notch / CodeIsland):
+            // cloud in the wing beside the camera, NOTHING below the menu bar.
+            // Must match IslandView dockWidth / dockHang (hang = 0).
+            let w = state.notch.width + (state.notchHovered ? 116 : 76)
+            return NSSize(width: w, height: nh)
         }
         return cloudSize
     }

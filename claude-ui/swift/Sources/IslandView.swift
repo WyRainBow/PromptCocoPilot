@@ -22,11 +22,7 @@ struct IslandRoot: View {
     @EnvironmentObject var state: AppState
 
     var body: some View {
-        content
-            .frame(width: frameWidth)
-            .fixedSize(horizontal: false, vertical: true)
-            .background(cardBackground)
-            .clipShape(clipShape)
+        rootContent
             .ignoresSafeArea(.all)
             .background(GeometryReader { proxy in
                 Color.clear.preference(key: HeightKey.self, value: proxy.size.height)
@@ -40,14 +36,14 @@ struct IslandRoot: View {
     }
 
     @ViewBuilder
-    private var content: some View {
+    private var rootContent: some View {
         if state.dockPreview {
             dockingPreview.transition(absorbTransition)
         } else {
             switch state.presence {
             case .floating: cloudFloating.transition(absorbTransition)
-            case .docked:   residentDocked.transition(absorbTransition)
-            case .expanded: VStack(spacing: 0) { cardHeader; expandedBody }.transition(.opacity)
+            case .docked:   dockedCanvas.transition(absorbTransition)
+            case .expanded: expandedCanvas.transition(.opacity)
             }
         }
     }
@@ -57,13 +53,18 @@ struct IslandRoot: View {
         .scale(scale: 0.35, anchor: .top).combined(with: .opacity)
     }
 
-    private var frameWidth: CGFloat {
-        if state.dockPreview { return 320 }
-        switch state.presence {
-        case .floating: return 140
-        case .docked:   return state.notchHovered ? 330 : 290
-        case .expanded: return 380
-        }
+    /// Small shoulder so the flush top curves into the menu bar instead of meeting
+    /// it with a hard square corner.
+    private let shoulderExt: CGFloat = 4
+
+    /// Flush menu-bar-height handle (Invoko "resident notch" / CodeIsland): the bar
+    /// lives AT menu-bar height with the cloud in the wing beside the camera and
+    /// NOTHING hanging below the menu-bar line. Its wide black wings sit inside the
+    /// (dark) menu bar so it reads as part of the notch, not a box below it. The
+    /// rounded bottom corners land right on the menu-bar line. Grows wider on hover.
+    private func dockHang(_ hovered: Bool) -> CGFloat { 0 }
+    private func dockWidth(_ hovered: Bool) -> CGFloat {
+        state.notch.width + (hovered ? 116 : 76)
     }
 
     // MARK: fold-cue preview — cloud snapped to the notch with a soft blue glow
@@ -114,63 +115,79 @@ struct IslandRoot: View {
             .onTapGesture(count: 2) { state.toggleExpand() }
     }
 
-    // MARK: resident cloud (docked in the notch) — drag down to pull out
+    // MARK: docked bar — hugs the notch via NotchPanelShape (shoulders + skirt)
 
-    private var residentDocked: some View {
+    /// The full docked canvas: the resident bar laid over a black notch shape
+    /// whose top is flush with the screen edge and whose shoulders curve into the
+    /// menu bar, so it reads as part of the notch rather than a box below it.
+    private var dockedCanvas: some View {
         let nh = max(24, state.notch.height)
         let hovered = state.notchHovered
-        // Wide thin bar: cloud flanks the camera on the left, dot on the right.
+        let fill = LinearGradient(colors: [.black, .black, Theme.bodyTint],
+                                  startPoint: .top, endPoint: .bottom)
+        return residentDocked
+            .frame(width: dockWidth(hovered), height: nh + dockHang(hovered))
+            .background(
+                // Flush bar at menu-bar height — blends into the dark menu bar,
+                // rounded bottom corners sit right at the menu-bar line, nothing
+                // hangs below (the CodeIsland look: never reads as overhang).
+                NotchPanelShape(topExtension: shoulderExt, bottomRadius: 11, minHeight: nh)
+                    .fill(fill)
+                    .padding(.horizontal, shoulderExt)
+            )
+    }
+
+    /// Contents of the docked bar — cloud flanks the camera on the left, status
+    /// dot on the right. Lives in the notch band (top `nh`); the shape's skirt
+    /// hangs below it.
+    private var residentDocked: some View {
+        let hovered = state.notchHovered
+        // Flush bar: cloud in the LEFT wing beside the camera, status dot in the
+        // RIGHT wing, both at menu-bar height (Invoko resident notch / CodeIsland).
         return HStack(spacing: 0) {
             RiveCloudView()
-                .frame(width: hovered ? 46 : 38, height: hovered ? 30 : 25)
-                .padding(.leading, 14)
+                .frame(width: hovered ? 34 : 30, height: hovered ? 32 : 28)
+                .padding(.leading, hovered ? 11 : 8)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            Color.clear.frame(width: state.notch.width)   // clear the camera
+            Color.clear.frame(width: state.notch.width)   // camera cutout
 
             Circle()
                 .fill(Theme.accent.opacity(0.85))
                 .frame(width: 6, height: 6)
                 .shadow(color: Theme.accent.opacity(0.7), radius: 3)
-                .padding(.trailing, 16)
+                .padding(.trailing, hovered ? 14 : 11)
                 .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .frame(height: nh + (hovered ? 12 : 6))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)   // center in the bar
         .contentShape(Rectangle())
-        .onHover { state.setNotchHover($0) }       // hover → expand the box
+        .onHover { state.setNotchHover($0) }       // hover → widen the bar
         .onTapGesture(count: 2) { state.toggleExpand() }
     }
 
-    // MARK: shape + background per presence
-    // Floating cloud = no card chrome (transparent, cloud floats). Docked /
-    // docked-expanded = square top to merge with the notch. Floating-expanded =
-    // a rounded floating card with a shadow.
+    // MARK: expanded card
+    // From the notch: a black card that hangs off the notch (flush top, rounded
+    // skirt). Floating: a rounded card with a drop shadow.
 
     private var floatingCard: Bool { state.isExpanded && !state.expandedFromDock }
 
-    private var islandShape: UnevenRoundedRectangle {
-        let topRounded = floatingCard
-        let r: CGFloat = state.isExpanded ? 18 : 14
-        return UnevenRoundedRectangle(
-            topLeadingRadius: topRounded ? r : 0, bottomLeadingRadius: r,
-            bottomTrailingRadius: r, topTrailingRadius: topRounded ? r : 0,
-            style: .continuous)
-    }
-
-    private var clipShape: AnyShape {
-        state.isFloating ? AnyShape(Rectangle()) : AnyShape(islandShape)
-    }
-
     @ViewBuilder
-    private var cardBackground: some View {
-        if state.isFloating {
-            Color.clear
+    private var expandedCanvas: some View {
+        let card = VStack(spacing: 0) { cardHeader; expandedBody }
+            .frame(width: 380)
+            .fixedSize(horizontal: false, vertical: true)
+        if state.expandedFromDock {
+            let nh = max(24, state.notch.height)
+            let shape = NotchPanelShape(topExtension: 0, bottomRadius: 22, minHeight: nh)
+            card.background(shape.fill(LinearGradient(colors: [.black, .black, Theme.bodyTint],
+                                                      startPoint: .top, endPoint: .bottom)))
+                .clipShape(shape)
         } else {
-            islandShape
-                .fill(LinearGradient(colors: [.black, .black, Theme.bodyTint],
-                                     startPoint: .top, endPoint: .bottom))
-                .shadow(color: floatingCard ? .black.opacity(0.5) : .clear,
-                        radius: floatingCard ? 22 : 0, y: floatingCard ? 8 : 0)
+            let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+            card.background(shape.fill(LinearGradient(colors: [.black, .black, Theme.bodyTint],
+                                                      startPoint: .top, endPoint: .bottom))
+                .shadow(color: .black.opacity(0.5), radius: 22, y: 8))
+                .clipShape(shape)
         }
     }
 
@@ -518,6 +535,59 @@ struct IslandRoot: View {
                 .padding(6)
             }
         }
+    }
+}
+
+// MARK: - Notch shape
+// Top edge is flush with the screen and flares out by `topExtension` on each side,
+// the shoulders curving down into the menu bar so the panel grows out of the notch.
+// Bottom corners use continuous-curvature (squircle) cubics. Ported from CodeIsland.
+
+private struct NotchPanelShape: Shape {
+    var topExtension: CGFloat
+    var bottomRadius: CGFloat
+    /// Fixed floor so a spring overshoot can't shrink the shape above the notch.
+    var minHeight: CGFloat = 0
+
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { AnimatablePair(topExtension, bottomRadius) }
+        set { topExtension = newValue.first; bottomRadius = newValue.second }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let ext = topExtension
+        let maxY = max(rect.maxY, rect.minY + minHeight)
+        let br = min(bottomRadius, rect.width / 4, (maxY - rect.minY) / 2)
+        let k: CGFloat = 0.62   // squircle tightness (0.5523 = circle)
+
+        var p = Path()
+        p.move(to: CGPoint(x: rect.minX - ext, y: rect.minY))
+        p.addLine(to: CGPoint(x: rect.maxX + ext, y: rect.minY))
+        // Right shoulder: top line → right side
+        p.addCurve(
+            to: CGPoint(x: rect.maxX, y: rect.minY + ext),
+            control1: CGPoint(x: rect.maxX + ext * 0.35, y: rect.minY),
+            control2: CGPoint(x: rect.maxX, y: rect.minY + ext * 0.35))
+        p.addLine(to: CGPoint(x: rect.maxX, y: maxY - br))
+        // Bottom-right
+        p.addCurve(
+            to: CGPoint(x: rect.maxX - br, y: maxY),
+            control1: CGPoint(x: rect.maxX, y: maxY - br * (1 - k)),
+            control2: CGPoint(x: rect.maxX - br * (1 - k), y: maxY))
+        p.addLine(to: CGPoint(x: rect.minX + br, y: maxY))
+        // Bottom-left
+        p.addCurve(
+            to: CGPoint(x: rect.minX, y: maxY - br),
+            control1: CGPoint(x: rect.minX + br * (1 - k), y: maxY),
+            control2: CGPoint(x: rect.minX, y: maxY - br * (1 - k)))
+        p.addLine(to: CGPoint(x: rect.minX, y: rect.minY + ext))
+        // Left shoulder: left side → top line
+        p.addCurve(
+            to: CGPoint(x: rect.minX - ext, y: rect.minY),
+            control1: CGPoint(x: rect.minX, y: rect.minY + ext * 0.35),
+            control2: CGPoint(x: rect.minX - ext * 0.35, y: rect.minY))
+        p.closeSubpath()
+        return p
     }
 }
 
