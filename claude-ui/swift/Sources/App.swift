@@ -152,6 +152,12 @@ final class AppState: ObservableObject {
     @Published var statusKind: StatusKind = .neutral
     @Published var busy = false
 
+    // ── Context-aware reply suggestions (Invoko-style) ────────────────────
+    @Published var suggestions: [String] = []
+    @Published var contextSummary: String = ""
+    @Published var suggestionsLoading = false
+    @Published var suggestionsOpen = false
+
     /// Drives which cloud .riv plays — backed by the state machine.
     @Published private(set) var mascot: MascotState = .idle
 
@@ -310,6 +316,47 @@ final class AppState: ObservableObject {
             }
             busy = false
         }
+    }
+
+    // MARK: - Context-aware reply suggestions (Invoko-style)
+
+    /// Gather screen context and fetch reply suggestions.
+    func gatherSuggestions() {
+        guard !suggestionsLoading else { return }
+        suggestionsLoading = true
+        suggestionsOpen = true
+
+        // Step 1: immediately collect the non-screenshot layers (sync, fast)
+        let ctx = ContextAwareness.gather()
+
+        Task {
+            // Step 2: fetch suggestions from the API (sync context only, no screenshot for speed)
+            do {
+                let resp = try await ReplySuggestionClient.fetchSuggestions(
+                    context: ctx,
+                    draft: draft,
+                    numSuggestions: 3
+                )
+                await MainActor.run {
+                    self.suggestions = resp.suggestions
+                    self.contextSummary = resp.contextSummary
+                    self.suggestionsLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    self.suggestions = []
+                    self.suggestionsLoading = false
+                    self.setStatus("⚠ 上下文感知失败: \(error.localizedDescription)", .error)
+                }
+            }
+        }
+    }
+
+    /// Apply a suggestion: paste it into the draft and close suggestions.
+    func applySuggestion(_ text: String) {
+        draft = text
+        suggestionsOpen = false
+        onResize?()
     }
 
     /// Paste the (possibly edited) result into the app the user came from, but

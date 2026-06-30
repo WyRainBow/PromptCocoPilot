@@ -15,6 +15,15 @@ try:
 except ImportError:
     from mcp_server.server import handle_enhance_prompt_tool  # type: ignore
 
+# Context awareness: screen-aware reply generation
+try:
+    from enhance import generate_reply_suggestions
+except ImportError:
+    try:
+        from mcp_server.enhance import generate_reply_suggestions
+    except ImportError:
+        generate_reply_suggestions = None  # type: ignore
+
 
 EnhanceHandler = Callable[[dict[str, Any]], str]
 
@@ -33,6 +42,54 @@ def build_enhance_response(
     return {
         "draft": draft,
         "enhanced": enhanced,
+    }
+
+
+def build_generate_reply_response(payload: dict[str, Any]) -> dict[str, Any]:
+    """Return reply suggestions for the current screen context.
+    
+    Payload shape (all optional except context):
+        {
+            "context": { ... ContextAwareness.Context JSON ... },
+            "draft": "optional existing draft text",
+            "num_suggestions": 3,
+        }
+    
+    Response shape:
+        {
+            "suggestions": ["回复选项1", "回复选项2", ...],
+            "context_summary": "App: 飞书 | Window: ... | URL: ...",
+        }
+    """
+    if generate_reply_suggestions is None:
+        raise RuntimeError("generate_reply_suggestions not available — ensure enhance.py is in the Python path")
+
+    context: dict[str, Any] = payload.get("context", {})
+    draft: str = str(payload.get("draft", "") or "").strip()
+    num: int = min(int(payload.get("num_suggestions", 3)), 5)
+
+    suggestions = generate_reply_suggestions(
+        context=context,
+        existing_draft=draft,
+        num_suggestions=num,
+    )
+
+    # Build human-readable context summary
+    app_name = context.get("appName", "")
+    window_title = context.get("windowTitle", "")
+    page_url = context.get("pageURL", "")
+    parts = []
+    if app_name:
+        parts.append(f"App: {app_name}")
+    if window_title:
+        parts.append(f"Window: {window_title}")
+    if page_url:
+        parts.append(f"URL: {page_url}")
+    summary = " | ".join(parts) if parts else "Unknown context"
+
+    return {
+        "suggestions": suggestions,
+        "context_summary": summary,
     }
 
 
@@ -56,25 +113,41 @@ class OptimizeInputHandler(BaseHTTPRequestHandler):
         self._send_json(404, {"error": "not_found"})
 
     def do_POST(self) -> None:
-        if self.path != "/enhance":
-            self._send_json(404, {"error": "not_found"})
+        if self.path == "/enhance":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
+                response = build_enhance_response(payload)
+            except ValueError as exc:
+                self._send_json(400, {"error": str(exc)})
+                return
+            except json.JSONDecodeError:
+                self._send_json(400, {"error": "invalid_json"})
+                return
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+                return
+            self._send_json(200, response)
             return
 
-        try:
-            length = int(self.headers.get("Content-Length", "0"))
-            payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
-            response = build_enhance_response(payload)
-        except ValueError as exc:
-            self._send_json(400, {"error": str(exc)})
-            return
-        except json.JSONDecodeError:
-            self._send_json(400, {"error": "invalid_json"})
-            return
-        except Exception as exc:
-            self._send_json(500, {"error": str(exc)})
+        if self.path == "/generate_reply":
+            try:
+                length = int(self.headers.get("Content-Length", "0"))
+                payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
+                response = build_generate_reply_response(payload)
+            except RuntimeError as exc:
+                self._send_json(503, {"error": str(exc)})
+                return
+            except json.JSONDecodeError:
+                self._send_json(400, {"error": "invalid_json"})
+                return
+            except Exception as exc:
+                self._send_json(500, {"error": str(exc)})
+                return
+            self._send_json(200, response)
             return
 
-        self._send_json(200, response)
+        self._send_json(404, {"error": "not_found"})
 
     def log_message(self, format: str, *args: Any) -> None:
         return

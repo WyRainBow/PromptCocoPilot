@@ -242,6 +242,9 @@ struct IslandRoot: View {
             sessionPicker
             contextViewer
 
+            // Invoko-style context-aware reply suggestions
+            quickReplySection
+
             fieldLabel("草稿")
             editor(text: $state.draft,
                    placeholder: "输入想发送给 Claude 的草稿，或按 ⌃⌥⌘P 抓取选中…",
@@ -285,6 +288,80 @@ struct IslandRoot: View {
         .padding(.horizontal, 14)
         .padding(.bottom, 14)
         .padding(.top, 6)
+    }
+
+    // MARK: Invoko-style context-aware reply suggestions
+
+    private var quickReplySection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            // Trigger row
+            HStack(spacing: 6) {
+                Button(action: state.gatherSuggestions) {
+                    HStack(spacing: 5) {
+                        if state.suggestionsLoading {
+                            ProgressView()
+                                .controlSize(.mini)
+                                .tint(Theme.muted)
+                        } else {
+                            Image(systemName: "eye")
+                                .font(.system(size: 10, weight: .semibold))
+                        }
+                        Text(state.suggestionsLoading ? "感知中…" : "感知上下文")
+                    }
+                    .font(.system(size: 11))
+                    .foregroundColor(Theme.muted)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(fieldBg)
+                }
+                .buttonStyle(.plain)
+                .disabled(state.suggestionsLoading)
+
+                if !state.contextSummary.isEmpty {
+                    Text(state.contextSummary)
+                        .font(.system(size: 9))
+                        .foregroundColor(Theme.muted.opacity(0.7))
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+
+            // Suggestions list
+            if state.suggestionsOpen && !state.suggestions.isEmpty {
+                VStack(spacing: 4) {
+                    ForEach(Array(state.suggestions.enumerated()), id: \.offset) { idx, suggestion in
+                        Button {
+                            state.applySuggestion(suggestion)
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text("\(idx + 1)")
+                                    .font(.system(size: 9, weight: .bold))
+                                    .foregroundColor(Theme.accent)
+                                    .frame(width: 14)
+                                Text(suggestion)
+                                    .font(.system(size: 11))
+                                    .foregroundColor(Theme.text)
+                                    .lineLimit(2)
+                                    .multilineTextAlignment(.leading)
+                                Spacer()
+                                Image(systemName: "arrow.right")
+                                    .font(.system(size: 9))
+                                    .foregroundColor(Theme.muted.opacity(0.5))
+                            }
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 7)
+                            .background(
+                                RoundedRectangle(cornerRadius: 7)
+                                    .fill(Theme.surfaceHi)
+                                    .overlay(RoundedRectangle(cornerRadius: 7)
+                                        .stroke(Theme.stroke, lineWidth: 1))
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
     }
 
     private func fieldLabel(_ text: String) -> some View {

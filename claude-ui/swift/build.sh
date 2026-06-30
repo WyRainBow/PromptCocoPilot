@@ -35,6 +35,7 @@ swiftc \
   -framework Cocoa \
   -framework SwiftUI \
   -framework Combine \
+  -framework ScreenCaptureKit \
   -F "$(pwd)/Frameworks" \
   -framework RiveRuntime \
   -Xlinker -rpath -Xlinker @loader_path/Frameworks \

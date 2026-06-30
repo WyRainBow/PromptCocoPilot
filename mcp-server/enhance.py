@@ -172,3 +172,213 @@ if __name__ == "__main__":
     ctx = "In login.py, the session check is failing for admin users after recent refactor."
     result = enhance_prompt(draft, ctx)
     print("Enhanced:", result)
+
+
+# ==================== Context-Aware Reply Suggestion ====================
+# Invoko-style: analyze screen context → generate 1-3 reply/action suggestions.
+
+REPLY_SYSTEM = "\n".join([
+    "你是一个上下文感知的回复助手。",
+    "根据屏幕上下文（App名称、窗口标题、页面URL、选中文字、输入框内容），",
+    "生成最合适的回复建议或操作选项。",
+    "规则：",
+    "1. 如果是聊天/邮件场景，生成自然对话回复；",
+    "2. 如果是文档/阅读场景，生成总结、解释、提取等操作建议；",
+    "3. 如果是搜索/导航场景，生成查询建议；",
+    "4. 每次返回1-3个选项，每个选项不超过50字；",
+    "5. 用中文输出；",
+    "6. 只返回选项列表，不要解释、不要编号前缀、每行一个选项，用换行分隔；",
+    "7. 选项要具体，自然，像真实用户会说的话或会做的操作；",
+])
+
+
+def _call_dashscope_reply(user_content: str) -> str:
+    """Call Dashscope for reply suggestions."""
+    if not _DASHSCOPE_API_KEY:
+        return ""
+
+    url = f"{DASHSCOPE_BASE_URL}/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {_DASHSCOPE_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": MODEL,
+        "messages": [
+            {"role": "system", "content": REPLY_SYSTEM},
+            {"role": "user", "content": user_content},
+        ],
+        "temperature": 0.7,
+        "max_tokens": 300,
+        "top_p": 0.95,
+    }
+
+    resp = requests.post(url, headers=headers, json=payload, timeout=30)
+    if resp.status_code != 200:
+        return ""
+
+    data = resp.json()
+    return data["choices"][0]["message"]["content"]
+
+
+def generate_reply_suggestions(
+    context: dict[str, Any],
+    existing_draft: str = "",
+    num_suggestions: int = 3,
+) -> list[str]:
+    """
+    Generate reply suggestions based on the current screen context.
+
+    Args:
+        context: Dict from ContextAwareness.Context (appName, bundleID, windowTitle,
+                 pageURL, selectedText, focusedFieldText, screenshot).
+        existing_draft: Optional text already in the input field.
+        num_suggestions: Max number of suggestions (1-5, capped).
+
+    Returns:
+        List of suggestion strings, up to num_suggestions.
+    """
+    if _DASHSCOPE_API_KEY:
+        app_name = context.get("appName", "")
+        bundle_id = context.get("bundleID", "")
+        window_title = context.get("windowTitle", "")
+        page_url = context.get("pageURL", "")
+        selected = context.get("selectedText", "")
+        field_text = context.get("focusedFieldText", "")
+
+        app_type = _detect_app_type(bundle_id, app_name, page_url)
+        context_desc = _build_context_desc(
+            app_name, app_type, window_title, page_url,
+            selected, field_text, existing_draft
+        )
+
+        try:
+            raw = _call_dashscope_reply(context_desc)
+            suggestions = _parse_suggestions(raw, num_suggestions)
+            if suggestions:
+                return suggestions
+        except Exception:
+            pass
+
+    return _fallback_suggestions(context, existing_draft)
+
+
+def _detect_app_type(bundle_id: str, app_name: str, page_url: str) -> str:
+    """Heuristically detect what kind of app this is."""
+    key = (bundle_id + " " + app_name).lower()
+    patterns = {
+        "飞书": ["lark", "feishu", "bytedance"],
+        "微信": ["wechat", "weixin"],
+        "Slack": ["slack"],
+        "钉钉": ["dingtalk", "dingding"],
+        "Gmail": ["mail.google", "gmail"],
+        "邮件客户端": ["mail.app", "outlook", "thunderbird"],
+        "浏览器": ["chrome", "safari", "firefox", "brave", "arc"],
+        "飞书文档": ["docs.feishu", "docs.lark"],
+        "Notion": ["notion"],
+        "Claude": ["claude"],
+        "代码编辑器": ["cursor", "vscode", "xcode", "sublime", "jetbrains"],
+    }
+    for app_type, keywords in patterns.items():
+        for kw in keywords:
+            if kw in key:
+                return app_type
+
+    if page_url:
+        if "feishu" in page_url or "lark" in page_url:
+            return "飞书"
+        if "mail.google" in page_url:
+            return "Gmail"
+        if "slack" in page_url:
+            return "Slack"
+
+    return "通用应用"
+
+
+def _build_context_desc(
+    app_name: str,
+    app_type: str,
+    window_title: str,
+    page_url: str,
+    selected: str,
+    field_text: str,
+    existing_draft: str,
+) -> str:
+    """Build the context description sent to the LLM."""
+    from urllib.parse import urlparse
+
+    lines = [
+        f"App名称: {app_name or '未知'}",
+        f"App类型: {app_type}",
+        f"窗口标题: {window_title or '未知'}",
+    ]
+    if page_url:
+        try:
+            parsed = urlparse(page_url)
+            url_short = f"{parsed.netloc}{parsed.path}"
+        except Exception:
+            url_short = page_url[:100]
+        lines.append(f"页面URL: {url_short}")
+
+    if selected:
+        lines.append(f"选中文本: {selected[:300]}")
+    if field_text:
+        lines.append(f"输入框内容: {field_text[:300]}")
+    if existing_draft:
+        lines.append(f"已有草稿: {existing_draft[:200]}")
+
+    return "\n".join(lines)
+
+
+def _parse_suggestions(raw: str, num: int) -> list[str]:
+    """Parse LLM output into a clean list of suggestions."""
+    lines = []
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        line = line.lstrip("0123456789.、)） ")
+        line = line.lstrip("-*•·")
+        line = line.strip()
+        if line and len(line) >= 2:
+            lines.append(line)
+        if len(lines) >= num:
+            break
+    return lines
+
+
+def _fallback_suggestions(context: dict[str, Any], existing_draft: str) -> list[str]:
+    """Keyword-based fallback when LLM is unavailable."""
+    app_type = _detect_app_type(
+        context.get("bundleID", ""),
+        context.get("appName", ""),
+        context.get("pageURL", ""),
+    )
+    selected = context.get("selectedText", "")
+
+    suggestions: list[str]
+    if app_type in ("飞书", "微信", "Slack", "钉钉"):
+        suggestions = ["好的收到", "收到，我看看", "稍等，我看下"]
+        if selected:
+            suggestions.append(f"关于「{selected[:30]}」的回复")
+    elif app_type in ("Gmail", "邮件客户端"):
+        suggestions = ["收到，我会处理", "好的，感谢告知", "了解，稍后回复你"]
+    elif app_type in ("浏览器", "飞书文档", "Notion"):
+        suggestions = ["帮我总结一下", "提取关键信息"]
+        if selected:
+            suggestions.append(f"解释：{selected[:30]}")
+    else:
+        suggestions = ["好的", "收到"]
+        if selected:
+            suggestions.append(f"关于「{selected[:30]}」")
+
+    seen = set()
+    unique: list[str] = []
+    for s in suggestions:
+        if s not in seen and s != existing_draft:
+            seen.add(s)
+            unique.append(s)
+        if len(unique) >= 3:
+            break
+    return unique
+
