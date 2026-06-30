@@ -180,47 +180,41 @@ struct IslandRoot: View {
 
     // MARK: docked bar — hugs the notch via NotchPanelShape (shoulders + skirt)
 
-    /// The full docked canvas: a pure Capsule (pill) exactly matching the notch dimensions,
-    /// centered on the camera cutout — never wider, never lower, never reads as a box.
+    /// The full docked canvas: a black bar same height as the notch, with
+    /// cloud on the left wing and three dots on the right wing, center transparent
+    /// so the camera cutout shows through.
     private var dockedCanvas: some View {
         let nh = max(24, state.notch.height)
         let hovered = state.notchHovered
         let dw = dockWidth(hovered)
-        return ZStack {
-            residentDocked
+
+        // Camera cutout is fixed ~185pt, centered in the bar
+        let cameraW: CGFloat = 185
+
+        return HStack(spacing: 0) {
+            // Left wing: cloud (fixed size)
+            RiveCloudView()
+                .frame(width: nh, height: nh)
+
+            // Center: transparent (camera cutout)
+            Color.clear
+                .frame(width: cameraW)
+
+            // Right wing: three dots
+            HStack(spacing: 6) {
+                Circle().fill(Color.white.opacity(0.55)).frame(width: 4, height: 4)
+                Circle().fill(Color.white.opacity(0.55)).frame(width: 4, height: 4)
+                Circle().fill(Color.white.opacity(0.55)).frame(width: 4, height: 4)
+            }
+            .frame(width: nh, height: nh)
         }
         .frame(width: dw, height: nh)
-        .background(
-            Capsule()
-                .fill(Color(hex: "1a1a2e").opacity(0.70))
-                .overlay(
-                    Capsule()
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color.white.opacity(0.18),
-                                    Color.white.opacity(0.06),
-                                    Color.white.opacity(0.0),
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            ),
-                            lineWidth: 1
-                        )
-                )
-        )
+        .background(Color.black.opacity(0.85))
     }
 
-    /// Contents of the docked bar — cloud centered over the camera cutout.
-    /// Capsule方案：云在胶囊正中央，居中。
+    /// Resident docked: empty in silent mode — content is in dockedCanvas.
     private var residentDocked: some View {
-        let hovered = state.notchHovered
-        return RiveCloudView()
-            .frame(width: hovered ? 46 : 38, height: hovered ? 34 : 28)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .contentShape(Rectangle())
-            .onHover { state.setNotchHover($0) }
-            .onTapGesture(count: 2) { state.toggleExpand() }
+        Color.clear
     }
 
     // MARK: expanded card
