@@ -30,37 +30,37 @@ struct RiveCloudView: View {
         vm = RiveCloudView.make(s)
     }
 
-    /// (file, artboard, stateMachine) per mascot state — names extracted from
-    /// the IPDefault*.riv files. Artboard names come from the .riv file structure;
-    /// state machine names default to the artboard name unless the .riv uses a custom one.
+    /// (file, artboard, stateMachine) per mascot state — extracted from the actual
+    /// .riv files via `riv_diag`. Some files contain multiple artboards (e.g. idle
+    /// + task complete), and the SM name does NOT always equal the artboard name.
     @MainActor
     static func make(_ s: MascotState) -> RiveViewModel? {
         let cfg: (file: String, artboard: String, sm: String)
         switch s {
         // ── Core lifecycle ───────────────────────────────────────────
-        case .idle:          cfg = ("IPDefaultIdle",         "idle",          "State Machine 1")
-        case .thinking:      cfg = ("IPDefaultThinking",     "thinking",      "Thinking")
-        case .routing:       cfg = ("IPDefaultRouting",       "routing",       "State Machine 1")
-        case .listening:     cfg = ("IPDefaultListening",    "listening",     "State Machine 1")
-        case .outputting:    cfg = ("IPDefaultOutputting",   "outputting",    "State Machine 1")
-        case .done:          cfg = ("IPDefaultDone",         "task complete", "Task Complete")
-        case .error:         cfg = ("IPDefaultError",        "error",         "State Machine 1")
+        case .idle:          cfg = ("IPDefaultIdle",          "idle",           "State Machine 1")
+        case .thinking:      cfg = ("IPDefaultThinking",       "thinking",        "Thinking")
+        case .routing:      cfg = ("IPDefaultRouting",        "routing",        "routing")
+        case .listening:     cfg = ("IPDefaultListening",     "listening",      "Listen")
+        case .outputting:    cfg = ("IPDefaultOutputting",     "outputting",     "Outputting")
+        case .done:          cfg = ("IPDefaultDone",          "task complete",  "Task Complete")
+        case .error:         cfg = ("IPDefaultError",        "error",          "error")
 
         // ── Input branch ─────────────────────────────────────────────
-        case .typing:        cfg = ("IPDefaultTyping",       "typing",        "State Machine 1")
+        case .typing:        cfg = ("IPDefaultTyping",         "typing",         "Typing")
 
         // ── Authorization branch ─────────────────────────────────────
-        case .authorization: cfg = ("IPDefaultAuthorization", "authorization", "State Machine 1")
+        case .authorization: cfg = ("IPDefaultAuthorization",  "authorization",  "authorization")
 
         // ── Notification / background ────────────────────────────────
-        case .recording:     cfg = ("IPDefaultWaveform",     "waveform",      "State Machine 1")
-        case .notification:  cfg = ("IPDefaultNotification", "notification",  "State Machine 1")
-        case .sparkle:       cfg = ("IPDefaultSparkle",     "sparkle",       "State Machine 1")
+        case .recording:     cfg = ("IPDefaultWaveform",      "recording",      "Recording")
+        case .notification: cfg = ("IPDefaultNotification",   "notification",   "notification")
+        case .sparkle:      cfg = ("IPDefaultSparkle",       "agent background","Agent background")
 
         // ── UI feedback ──────────────────────────────────────────────
-        case .acknowledge:    cfg = ("IPDefaultAcknowledge", "acknowledge",   "State Machine 1")
-        case .backgroundHint: cfg = ("IPDefaultBackgroundHint", "backgroundHint", "State Machine 1")
-        case .help:          cfg = ("IPDefaultHelp",        "help",          "State Machine 1")
+        case .acknowledge:   cfg = ("IPDefaultAcknowledge",    "task done",      "Task done")
+        case .backgroundHint: cfg = ("IPDefaultBackgroundHint","background hint","background hint")
+        case .help:         cfg = ("IPDefaultHelp",           "ask human",      "Ask Human")
         }
         guard let url = rivURL(cfg.file),
               let data = try? Data(contentsOf: url),
