@@ -555,10 +555,12 @@ final class IslandWindowController {
             if state.expandedFromDock {
                 origin = CGPoint(x: sf.midX - size.width / 2, y: sf.maxY - size.height)
             } else {
-                if floatingOrigin == .zero { floatingOrigin = defaultFloatingOrigin(sf) }
-                let cloudTop = floatingOrigin.y + cloudSize.height   // grow down from cloud top
+                // Card grows downward from the notch bottom (menu-bar line), NOT from the cloud.
+                // The cloud is just a visual cue; the card always expands from the notch.
+                let menuBarH: CGFloat = 28
+                let notchBottom = sf.maxY - menuBarH
                 let cx = floatingOrigin.x + cloudSize.width / 2
-                origin = clampOrigin(CGPoint(x: cx - size.width / 2, y: cloudTop - size.height),
+                origin = clampOrigin(CGPoint(x: cx - size.width / 2, y: notchBottom - size.height),
                                      size: size, sf: sf)
             }
         } else if state.dockPreview || state.isDocked {
@@ -599,8 +601,12 @@ final class IslandWindowController {
 
     // MARK: geometry helpers
 
+    /// Floating cloud appears right below the notch (menu-bar line), so it looks like
+    /// it "grows out" of the notch rather than floating independently.
+    /// Y = notch bottom edge = sf.maxY - menuBarH
     private func defaultFloatingOrigin(_ sf: NSRect) -> CGPoint {
-        CGPoint(x: sf.midX - cloudSize.width / 2, y: sf.maxY - 90 - cloudSize.height)
+        let menuBarH: CGFloat = 28
+        return CGPoint(x: sf.midX - cloudSize.width / 2, y: sf.maxY - menuBarH - cloudSize.height)
     }
 
     private func clampOrigin(_ o: CGPoint, size: NSSize, sf: NSRect) -> CGPoint {

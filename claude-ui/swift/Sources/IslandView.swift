@@ -84,39 +84,57 @@ struct IslandRoot: View {
 
     // MARK: fold-cue preview — cloud snapped to the notch with a soft blue glow
 
+    /// Docking preview: a notch-width bar with a glow emanating from the notch bottom edge.
+    /// - The black bar matches the docked canvas exactly (same shape, width, and cloud position)
+    /// - The glow radiates downward from the notch bottom (menu-bar line), like light from the notch
     private var dockingPreview: some View {
         let nh = max(24, state.notch.height)
-        // Invoko-style glow: dark sub-frame + blue edge stroke + blue shadow
-        let glowColor = Color(red: 0.55, green: 0.78, blue: 1.0)  // #8CC5FF
+        let dw = dockWidth(true)   // same as hovered docked width
+        let glowColor = Color(hex: "#8CC5FF")
+
         return ZStack(alignment: .top) {
-            // 1. Sub-frame: dark panel wider than notch, fills from notch band downward
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.black.opacity(0.85))
-                .frame(width: 290, height: nh + 80)
-                .offset(y: -8)
+            // Layer 1: Glow emanating from the notch bottom edge
+            // A soft radial glow centered at the notch bottom, spreading downward
+            RadialGradient(
+                gradient: Gradient(colors: [
+                    glowColor.opacity(0.35),   // bright core at the notch line
+                    glowColor.opacity(0.15),   // mid fade
+                    glowColor.opacity(0.0),    // transparent edge
+                ]),
+                center: .top,                 // center at the notch bottom
+                startRadius: 0,
+                endRadius: 80)               // glow spreads 80px downward
+                .frame(width: dw + 20, height: 90)
+                .blur(radius: 12)
+                .offset(y: nh - 6)
 
-            // 2. Blue glow overlay (soft ambient fill)
-            Color(hex: "#8CC5FF")
-                .opacity(0.18)
-                .blur(radius: 18)
-                .frame(width: 290, height: nh + 80)
-                .offset(y: -8)
+            // Layer 2: The black bar — exactly like dockedCanvas, but with cloud on left
+            // Uses NotchPanelShape so top curves into menu bar
+            HStack(spacing: 0) {
+                RiveCloudView()
+                    .frame(width: 40, height: 32)
+                    .padding(.leading, 11)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-            // 3. Blue edge stroke (Invoko-style edge glow)
-            RoundedRectangle(cornerRadius: 14)
-                .stroke(glowColor.opacity(0.45), lineWidth: 1.2)
-                .frame(width: 290, height: nh + 80)
-                .offset(y: -8)
+                Color.clear.frame(width: state.notch.width)   // camera cutout
 
-            // 4. Cloud sitting in the notch band, centered.
-            RiveCloudView()
-                .frame(width: 46, height: 32)
-                .frame(maxWidth: .infinity)
-                .frame(height: nh)
+                Circle()
+                    .fill(Theme.accent.opacity(0.85))
+                    .frame(width: 6, height: 6)
+                    .shadow(color: Theme.accent.opacity(0.7), radius: 3)
+                    .padding(.trailing, 14)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            .frame(width: dw, height: nh)
+            .background(
+                NotchPanelShape(topExtension: shoulderExt, bottomRadius: 11, minHeight: nh)
+                    .fill(LinearGradient(colors: [.black, .black, Theme.bodyTint],
+                                         startPoint: .top, endPoint: .bottom))
+                    .padding(.horizontal, shoulderExt)
+            )
         }
         .frame(maxWidth: .infinity)
-        .frame(height: nh + 80)
-        .shadow(color: glowColor.opacity(0.35), radius: 12, y: 4)
+        .frame(height: nh)
     }
 
     // MARK: floating cloud (free on the desktop) — double-click to expand
