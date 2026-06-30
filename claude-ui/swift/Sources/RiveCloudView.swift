@@ -31,14 +31,36 @@ struct RiveCloudView: View {
     }
 
     /// (file, artboard, stateMachine) per mascot state — names extracted from
-    /// the IPDefault*.riv files.
+    /// the IPDefault*.riv files. Artboard names come from the .riv file structure;
+    /// state machine names default to the artboard name unless the .riv uses a custom one.
     @MainActor
     static func make(_ s: MascotState) -> RiveViewModel? {
         let cfg: (file: String, artboard: String, sm: String)
         switch s {
-        case .idle:     cfg = ("IPDefaultIdle", "idle", "State Machine 1")
-        case .thinking: cfg = ("IPDefaultThinking", "thinking", "Thinking")
-        case .done:     cfg = ("IPDefaultDone", "task complete", "Task Complete")
+        // ── Core lifecycle ───────────────────────────────────────────
+        case .idle:          cfg = ("IPDefaultIdle",         "idle",          "State Machine 1")
+        case .thinking:      cfg = ("IPDefaultThinking",     "thinking",      "Thinking")
+        case .routing:       cfg = ("IPDefaultRouting",       "routing",       "State Machine 1")
+        case .listening:     cfg = ("IPDefaultListening",    "listening",     "State Machine 1")
+        case .outputting:    cfg = ("IPDefaultOutputting",   "outputting",    "State Machine 1")
+        case .done:          cfg = ("IPDefaultDone",         "task complete", "Task Complete")
+        case .error:         cfg = ("IPDefaultError",        "error",         "State Machine 1")
+
+        // ── Input branch ─────────────────────────────────────────────
+        case .typing:        cfg = ("IPDefaultTyping",       "typing",        "State Machine 1")
+
+        // ── Authorization branch ─────────────────────────────────────
+        case .authorization: cfg = ("IPDefaultAuthorization", "authorization", "State Machine 1")
+
+        // ── Notification / background ────────────────────────────────
+        case .recording:     cfg = ("IPDefaultWaveform",     "waveform",      "State Machine 1")
+        case .notification:  cfg = ("IPDefaultNotification", "notification",  "State Machine 1")
+        case .sparkle:       cfg = ("IPDefaultSparkle",     "sparkle",       "State Machine 1")
+
+        // ── UI feedback ──────────────────────────────────────────────
+        case .acknowledge:    cfg = ("IPDefaultAcknowledge", "acknowledge",   "State Machine 1")
+        case .backgroundHint: cfg = ("IPDefaultBackgroundHint", "backgroundHint", "State Machine 1")
+        case .help:          cfg = ("IPDefaultHelp",        "help",          "State Machine 1")
         }
         guard let url = rivURL(cfg.file),
               let data = try? Data(contentsOf: url),

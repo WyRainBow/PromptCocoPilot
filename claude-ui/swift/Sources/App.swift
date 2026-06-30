@@ -87,8 +87,42 @@ struct NotchInfo: Equatable {
 }
 
 // MARK: - Mascot animation state (which .riv the cloud plays)
+//
+// Invoko's cloud mascot supports 15 animation states across the full AI interaction
+// lifecycle. Each state maps to an IPDefault*.riv artboard + Rive state machine.
+// Internal cloud components (cloud, eyes, blink, hand/handL/handR, planet, bulb)
+// animate autonomously per the Rive state machine inside each .riv file.
+//
+// State transitions follow NotchStateMachine.md invariants:
+//   idle → typing → listening → routing → outputting → done → idle
+//   error, authorization, recording, notification, help are orthogonal branches.
 
-enum MascotState: Equatable { case idle, thinking, done }
+enum MascotState: Equatable, CaseIterable {
+    // ── Core lifecycle ──────────────────────────────────────────────────
+    case idle          // blinking cloud, no activity
+    case thinking      // eyes open, loading with no stream output
+    case routing       // planet in motion, loading, no output yet
+    case listening     // eyes + raised hand, voice capture active
+    case outputting    // eyes + hand, streaming output
+    case done          // firework burst, task complete
+    case error         // cloud alone, something went wrong
+
+    // ── Input branch ────────────────────────────────────────────────────
+    case typing        // hands raised, input box visible
+
+    // ── Authorization branch ───────────────────────────────────────────
+    case authorization // authorization request pending
+
+    // ── Notification / background ───────────────────────────────────────
+    case recording     // waveform/mic bars, voice recording
+    case notification  // notification pulse
+    case sparkle       // backend agent sparkle burst
+
+    // ── UI feedback ─────────────────────────────────────────────────────
+    case acknowledge    // transient confirmation (PP Neue Montreal font)
+    case backgroundHint // idle background hint
+    case help           // help/debug artboard
+}
 
 // MARK: - Shared state
 
@@ -117,7 +151,35 @@ final class AppState: ObservableObject {
     @Published var status = ""
     @Published var statusKind: StatusKind = .neutral
     @Published var busy = false
-    @Published var mascot: MascotState = .idle   // drives which cloud .riv plays
+
+    /// Drives which cloud .riv plays — backed by the state machine.
+    @Published private(set) var mascot: MascotState = .idle
+
+    /// Full 15-state lifecycle machine. `mascot` mirrors `mascotSM.state`.
+    let mascotSM = MascotStateMachine()
+
+    private var mascotCancellable: AnyCancellable?
+    private var draftCancellables = Set<AnyCancellable>()
+
+    init() {
+        // Mirror mascotSM state → published mascot so SwiftUI views observe changes.
+        mascotCancellable = mascotSM.$state
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] s in self?.mascot = s }
+
+        // Detect typing in the draft field → cloud raises hands.
+        $draft
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] text in
+                guard let self else { return }
+                if !text.isEmpty && !self.busy && self.mascot != .typing {
+                    self.mascotSM.startTyping()
+                } else if text.isEmpty && !self.busy && self.mascot == .typing {
+                    self.mascotSM.goIdle()
+                }
+            }
+            .store(in: &draftCancellables)
+    }
 
     private var conversation: [Turn] = []
 
@@ -233,7 +295,7 @@ final class AppState: ObservableObject {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return setStatus("请先输入草稿", .error) }
         busy = true
-        mascot = .thinking            // cloud "thinking" while enhancing
+        mascotSM.startThinking()
         setStatus("", .neutral)
         Task {
             do {
@@ -241,22 +303,12 @@ final class AppState: ObservableObject {
                     draft: text, conversation: conversation)
                 result = out
                 setStatus("✓ 增强完成", .ok)
-                mascot = .done          // cloud "fireworks" on success
-                scheduleMascotIdle()
+                mascotSM.finishOutput()
             } catch {
                 setStatus("⚠ \(error.localizedDescription)", .error)
-                mascot = .idle
+                mascotSM.showError()
             }
             busy = false
-        }
-    }
-
-    /// Return the cloud to idle a few seconds after a "done" celebration.
-    private func scheduleMascotIdle() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) { [weak self] in
-            MainActor.assumeIsolated {
-                if self?.mascot == .done { self?.mascot = .idle }
-            }
         }
     }
 
