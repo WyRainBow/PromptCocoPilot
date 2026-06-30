@@ -77,9 +77,10 @@ struct IslandRoot: View {
     /// NOTHING hanging below the menu-bar line. Its wide black wings sit inside the
     /// (dark) menu bar so it reads as part of the notch, not a box below it. The
     /// rounded bottom corners land right on the menu-bar line. Grows wider on hover.
+    /// Capsule方案：宽=刘海开孔宽，高=刘海高，居中放在开孔正下方。
     private func dockHang(_ hovered: Bool) -> CGFloat { 0 }
     private func dockWidth(_ hovered: Bool) -> CGFloat {
-        state.notch.width + (hovered ? 145 : 105)
+        state.notch.width + (hovered ? 20 : 0)
     }
 
     // MARK: fold-cue preview — cloud snapped to the notch with a soft blue glow
@@ -93,44 +94,73 @@ struct IslandRoot: View {
         let glowColor = Color(hex: "#8CC5FF")
 
         return ZStack(alignment: .top) {
-            // Layer 1: Glow emanating from the notch bottom edge
-            // A soft radial glow centered at the notch bottom, spreading downward
+            // Layer 1: Outer glow — wide, soft halo
             RadialGradient(
                 gradient: Gradient(colors: [
-                    glowColor.opacity(0.35),   // bright core at the notch line
-                    glowColor.opacity(0.15),   // mid fade
-                    glowColor.opacity(0.0),    // transparent edge
+                    glowColor.opacity(0.0),
+                    glowColor.opacity(0.08),
+                    glowColor.opacity(0.0),
                 ]),
-                center: .top,                 // center at the notch bottom
+                center: .top,
                 startRadius: 0,
-                endRadius: 80)               // glow spreads 80px downward
-                .frame(width: dw + 20, height: 90)
-                .blur(radius: 12)
-                .offset(y: nh - 6)
+                endRadius: 120)
+                .frame(width: dw + 80, height: 130)
+                .blur(radius: 20)
+                .offset(y: nh - 4)
 
-            // Layer 2: The black bar — exactly like dockedCanvas, but with cloud on left
-            // Uses NotchPanelShape so top curves into menu bar
-            HStack(spacing: 0) {
+            // Layer 2: Mid glow — the main light bloom
+            RadialGradient(
+                gradient: Gradient(colors: [
+                    glowColor.opacity(0.45),
+                    glowColor.opacity(0.20),
+                    glowColor.opacity(0.05),
+                    glowColor.opacity(0.0),
+                ]),
+                center: .top,
+                startRadius: 0,
+                endRadius: 80)
+                .frame(width: dw + 40, height: 100)
+                .blur(radius: 14)
+                .offset(y: nh - 4)
+
+            // Layer 3: Core glow — bright inner bloom right at the notch edge
+            RadialGradient(
+                gradient: Gradient(colors: [
+                    glowColor.opacity(0.70),
+                    glowColor.opacity(0.35),
+                    glowColor.opacity(0.0),
+                ]),
+                center: .top,
+                startRadius: 0,
+                endRadius: 40)
+                .frame(width: dw + 16, height: 60)
+                .blur(radius: 8)
+                .offset(y: nh - 2)
+
+            // Layer 4: The capsule bar — dark glass with cloud centered
+            ZStack {
                 RiveCloudView()
-                    .frame(width: 40, height: 32)
-                    .padding(.leading, 11)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                Color.clear.frame(width: state.notch.width)   // camera cutout
-
-                Circle()
-                    .fill(Theme.accent.opacity(0.85))
-                    .frame(width: 6, height: 6)
-                    .shadow(color: Theme.accent.opacity(0.7), radius: 3)
-                    .padding(.trailing, 14)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .frame(width: nh * 0.9, height: nh * 0.9)
             }
             .frame(width: dw, height: nh)
             .background(
-                NotchPanelShape(topExtension: shoulderExt, bottomRadius: 11, minHeight: nh)
-                    .fill(LinearGradient(colors: [.black, .black, Theme.bodyTint],
-                                         startPoint: .top, endPoint: .bottom))
-                    .padding(.horizontal, shoulderExt)
+                Capsule()
+                    .fill(Color(hex: "1a1a2e").opacity(0.70))
+                    .overlay(
+                        Capsule()
+                            .stroke(
+                                LinearGradient(
+                                    colors: [
+                                        Color.white.opacity(0.18),
+                                        Color.white.opacity(0.06),
+                                        Color.white.opacity(0.0),
+                                    ],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                ),
+                                lineWidth: 1
+                            )
+                    )
             )
         }
         .frame(maxWidth: .infinity)
@@ -150,52 +180,47 @@ struct IslandRoot: View {
 
     // MARK: docked bar — hugs the notch via NotchPanelShape (shoulders + skirt)
 
-    /// The full docked canvas: the resident bar laid over a black notch shape
-    /// whose top is flush with the screen edge and whose shoulders curve into the
-    /// menu bar, so it reads as part of the notch rather than a box below it.
+    /// The full docked canvas: a pure Capsule (pill) exactly matching the notch dimensions,
+    /// centered on the camera cutout — never wider, never lower, never reads as a box.
     private var dockedCanvas: some View {
         let nh = max(24, state.notch.height)
         let hovered = state.notchHovered
-        let fill = LinearGradient(colors: [.black, .black, Theme.bodyTint],
-                                  startPoint: .top, endPoint: .bottom)
-        return residentDocked
-            .frame(width: dockWidth(hovered), height: nh + dockHang(hovered))
-            .background(
-                // Flush bar at menu-bar height — blends into the dark menu bar,
-                // rounded bottom corners sit right at the menu-bar line, nothing
-                // hangs below (the CodeIsland look: never reads as overhang).
-                NotchPanelShape(topExtension: shoulderExt, bottomRadius: 11, minHeight: nh)
-                    .fill(fill)
-                    .padding(.horizontal, shoulderExt)
-            )
+        let dw = dockWidth(hovered)
+        return ZStack {
+            residentDocked
+        }
+        .frame(width: dw, height: nh)
+        .background(
+            Capsule()
+                .fill(Color(hex: "1a1a2e").opacity(0.70))
+                .overlay(
+                    Capsule()
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.18),
+                                    Color.white.opacity(0.06),
+                                    Color.white.opacity(0.0),
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ),
+                            lineWidth: 1
+                        )
+                )
+        )
     }
 
-    /// Contents of the docked bar — cloud flanks the camera on the left, status
-    /// dot on the right. Lives in the notch band (top `nh`); the shape's skirt
-    /// hangs below it.
+    /// Contents of the docked bar — cloud centered over the camera cutout.
+    /// Capsule方案：云在胶囊正中央，居中。
     private var residentDocked: some View {
         let hovered = state.notchHovered
-        // Flush bar: cloud in the LEFT wing beside the camera, status dot in the
-        // RIGHT wing, both at menu-bar height (Invoko resident notch / CodeIsland).
-        return HStack(spacing: 0) {
-            RiveCloudView()
-                .frame(width: hovered ? 40 : 36, height: hovered ? 32 : 31)
-                .padding(.leading, hovered ? 11 : 8)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Color.clear.frame(width: state.notch.width)   // camera cutout
-
-            Circle()
-                .fill(Theme.accent.opacity(0.85))
-                .frame(width: 6, height: 6)
-                .shadow(color: Theme.accent.opacity(0.7), radius: 3)
-                .padding(.trailing, hovered ? 14 : 11)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)   // center in the bar
-        .contentShape(Rectangle())
-        .onHover { state.setNotchHover($0) }       // hover → widen the bar
-        .onTapGesture(count: 2) { state.toggleExpand() }
+        return RiveCloudView()
+            .frame(width: hovered ? 46 : 38, height: hovered ? 34 : 28)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .onHover { state.setNotchHover($0) }
+            .onTapGesture(count: 2) { state.toggleExpand() }
     }
 
     // MARK: expanded card

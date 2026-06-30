@@ -572,6 +572,13 @@ final class IslandWindowController {
         }
         let frame = NSRect(origin: origin, size: size)
         if animated {
+            // "From above" drop-in: on first dockPreview entry, instantly snap to above the
+            // screen, then spring down so it looks like the island "falls from the notch".
+            if state.dockPreview && !state.isDocked {
+                let startFrame = NSRect(origin: CGPoint(x: sf.midX - size.width / 2, y: sf.maxY + 10),
+                                        size: size)
+                panel.setFrame(startFrame, display: true)
+            }
             // Springy overshoot — the cloud gets "sucked" into the notch / pops out.
             NSAnimationContext.runAnimationGroup { ctx in
                 ctx.duration = 0.42
