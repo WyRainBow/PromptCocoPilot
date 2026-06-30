@@ -41,7 +41,7 @@ struct IslandRoot: View {
             dockingPreview.transition(absorbTransition)
         } else {
             switch state.presence {
-            case .floating: cloudFloating.transition(absorbTransition)
+            case .floating: cloudFloating.transition(.opacity)
             case .docked:   dockedCanvas.transition(absorbTransition)
             case .expanded: expandedCanvas.transition(.opacity)
             }
