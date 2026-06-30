@@ -109,6 +109,9 @@ final class AppState: ObservableObject {
 
     /// Called after `expanded` changes so the window can resize + re-dock.
     var onResize: (() -> Void)?
+    /// SwiftUI reports its measured content height so the window can hug it.
+    var onHeight: ((CGFloat) -> Void)?
+    func reportHeight(_ h: CGFloat) { onHeight?(h) }
     /// Window-origin accessors so the header can drag the card (Invoko-style).
     var getOrigin: (() -> CGPoint)?
     var setOrigin: ((CGPoint) -> Void)?
@@ -152,6 +155,9 @@ final class AppState: ObservableObject {
     }
 
     func toggle() { expanded ? collapse() : expand() }
+
+    /// Toggle the context list and resize the card to fit it.
+    func toggleContext() { contextOpen.toggle(); onResize?() }
 
     func refreshSessions() {
         Task { [weak self] in
@@ -314,6 +320,7 @@ final class IslandWindowController {
         panel = p
 
         state.onResize = { [weak self] in self?.applySize() }
+        state.onHeight = { [weak self] h in self?.applyMeasuredHeight(h) }
         state.getOrigin = { [weak p] in p?.frame.origin ?? .zero }
         state.setOrigin = { [weak self] pt in self?.moveHorizontally(to: pt.x) }
         state.refocusIsland = { [weak p] in p?.makeKey() }
@@ -398,8 +405,13 @@ final class IslandWindowController {
 
     func resetToNotch() { applyFrame(center: true) }
 
+    /// Expanded height tracks the content's real rendered height (reported by
+    /// SwiftUI via onHeight), so the card hugs its content with no empty padding.
+    private var measuredExpandedHeight: CGFloat = 440
+
     private func sizeFor(_ expanded: Bool) -> NSSize {
-        NSSize(width: 380, height: expanded ? 470 : max(28, state.notch.height))
+        NSSize(width: 380,
+               height: expanded ? measuredExpandedHeight : max(28, state.notch.height))
     }
 
     /// Keep the panel attached to the very top of the notch screen. `center`
@@ -419,6 +431,15 @@ final class IslandWindowController {
     func applySize() {
         applyFrame(center: false)
         if state.expanded { panel.makeKey() }
+    }
+
+    /// SwiftUI reports its rendered content height; resize the card to match.
+    private func applyMeasuredHeight(_ h: CGFloat) {
+        guard state.expanded else { return }
+        let clamped = max(200, h.rounded(.up))
+        guard abs(clamped - measuredExpandedHeight) > 0.5 else { return }
+        measuredExpandedHeight = clamped
+        applyFrame(center: false)
     }
 
     /// Horizontal-only drag — the island stays glued to the top edge.

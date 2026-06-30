@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: ""
-title: PromptCocoPilot 上下文感知增强编排层
+title: PromptCocoPilot 跨模态提示词增强编排层
 scope:
     - README.md
     - package.json

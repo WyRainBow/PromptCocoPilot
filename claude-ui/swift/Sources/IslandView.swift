@@ -26,10 +26,15 @@ struct IslandRoot: View {
             headerBar
             if state.expanded { expandedBody }
         }
+        .frame(width: 380)       // fixed width → content drives the height
+        .fixedSize(horizontal: false, vertical: true)
         .background(background)
         .clipShape(islandShape)
         .ignoresSafeArea(.all)   // draw under the notch, not below it
-        .animation(.easeOut(duration: 0.16), value: state.contextOpen)
+        .background(GeometryReader { proxy in
+            Color.clear.preference(key: HeightKey.self, value: proxy.size.height)
+        })
+        .onPreferenceChange(HeightKey.self) { state.reportHeight($0) }
     }
 
     /// Square top (flush with the notch / screen edge), rounded bottom, squircle.
@@ -102,45 +107,61 @@ struct IslandRoot: View {
     }
 
     private var cardContent: some View {
-        VStack(alignment: .leading, spacing: 9) {
+        VStack(alignment: .leading, spacing: 10) {
             sessionPicker
             contextViewer
 
+            fieldLabel("草稿")
             editor(text: $state.draft,
                    placeholder: "输入想发送给 Claude 的草稿，或按 ⌃⌥⌘P 抓取选中…",
-                   minHeight: 58, color: Theme.text)
+                   height: 76, color: Theme.text)
 
             Button(action: state.enhance) {
                 HStack(spacing: 6) {
-                    if state.busy { ProgressView().controlSize(.small).tint(.white) }
-                    Text(state.busy ? "增强中…" : "▶ 增强")
+                    if state.busy {
+                        ProgressView().controlSize(.small).tint(.white)
+                    } else {
+                        Image(systemName: "sparkles").font(.system(size: 11, weight: .bold))
+                    }
+                    Text(state.busy ? "增强中…" : "增强")
                 }
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(PillButton(kind: .primary))
             .disabled(state.busy)
 
-            if !state.status.isEmpty {
-                Text(state.status)
-                    .font(.system(size: 10))
-                    .foregroundColor(statusColor)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
+            Text(state.status.isEmpty ? " " : state.status)
+                .font(.system(size: 10))
+                .foregroundColor(statusColor)
+                .frame(maxWidth: .infinity, minHeight: 12, alignment: .center)
 
             // Result is editable — tweak the enhanced text before / between applies.
+            fieldLabel("结果")
             editor(text: $state.result,
                    placeholder: "增强结果会显示在这里（可编辑）…",
-                   minHeight: 80, color: Theme.result)
+                   height: 100, color: Theme.result)
 
             Button(action: state.apply) {
-                Text("✓ 应用").frame(maxWidth: .infinity)
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark").font(.system(size: 10, weight: .bold))
+                    Text("应用")
+                }
+                .frame(maxWidth: .infinity)
             }
             .buttonStyle(PillButton(kind: .secondary))
             .disabled(!state.canApply)
         }
-        .padding(.horizontal, 13)
-        .padding(.bottom, 13)
-        .padding(.top, 4)
+        .padding(.horizontal, 14)
+        .padding(.bottom, 14)
+        .padding(.top, 6)
+    }
+
+    private func fieldLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 9, weight: .semibold))
+            .foregroundColor(Theme.muted.opacity(0.8))
+            .padding(.leading, 2)
+            .padding(.bottom, -4)
     }
 
     // MARK: session picker
@@ -185,9 +206,12 @@ struct IslandRoot: View {
 
     /// Small colored tag showing which agent a session belongs to.
     private func agentBadge(_ agent: AgentKind) -> some View {
-        let tint = agent == .codex
-            ? Color(red: 0.40, green: 0.85, blue: 0.60)
-            : Color(red: 1.0, green: 0.72, blue: 0.38)
+        let tint: Color
+        switch agent {
+        case .claude: tint = Color(red: 1.0, green: 0.72, blue: 0.38)   // orange
+        case .codex:  tint = Color(red: 0.40, green: 0.85, blue: 0.60)  // green
+        case .qoder:  tint = Color(red: 0.70, green: 0.58, blue: 1.0)   // purple
+        }
         return Text(agent.rawValue)
             .font(.system(size: 8, weight: .bold))
             .foregroundColor(tint)
@@ -237,10 +261,15 @@ struct IslandRoot: View {
                             .foregroundColor(Theme.text)
                             .lineLimit(1)
                     }
-                    Text("\(s.pathTail) · \(s.ago) · \(s.messageCount)条")
-                        .font(.system(size: 9))
-                        .foregroundColor(Theme.muted)
-                        .lineLimit(1)
+                    HStack(spacing: 4) {
+                        Text("\(s.pathTail) · \(s.ago) · \(s.messageCount)条")
+                            .font(.system(size: 9))
+                            .foregroundColor(Theme.muted)
+                            .lineLimit(1)
+                        Text(s.sid)
+                            .font(.system(size: 8.5, design: .monospaced))
+                            .foregroundColor(Theme.muted.opacity(0.6))
+                    }
                 }
                 Spacer(minLength: 4)
                 if selected {
@@ -265,7 +294,7 @@ struct IslandRoot: View {
 
     private var contextViewer: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Button { state.contextOpen.toggle() } label: {
+            Button { state.toggleContext() } label: {
                 HStack(spacing: 5) {
                     Text("📂 压缩的上下文")
                     Spacer()
@@ -343,26 +372,35 @@ struct IslandRoot: View {
 
     @ViewBuilder
     private func editor(text: Binding<String>, placeholder: String,
-                        minHeight: CGFloat, color: Color,
+                        height: CGFloat, color: Color,
                         readOnly: Bool = false) -> some View {
         ZStack(alignment: .topLeading) {
             if text.wrappedValue.isEmpty {
                 Text(placeholder)
-                    .font(.system(size: 11))
-                    .foregroundColor(Theme.muted.opacity(0.7))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 8)
+                    .font(.system(size: 11.5))
+                    .foregroundColor(Theme.muted.opacity(0.65))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 9)
             }
             TextEditor(text: text)
-                .font(.system(size: 11))
+                .font(.system(size: 11.5))
                 .foregroundColor(color)
                 .scrollContentBackgroundCompat()
                 .disabled(readOnly)
-                .frame(minHeight: minHeight)
-                .padding(.horizontal, 2)
-                .padding(.vertical, 4)
+                .frame(height: height)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 5)
         }
         .background(fieldBg)
+    }
+}
+
+// MARK: - Content height reporting
+
+private struct HeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }
 
@@ -375,12 +413,22 @@ private struct PillButton: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundColor(kind == .primary ? .white : Theme.text)
+            .font(.system(size: 12.5, weight: .semibold))
+            .foregroundColor(kind == .primary ? .white : Theme.accent)
             .padding(.vertical, 9)
+            .frame(maxWidth: .infinity)
             .background(background(pressed: configuration.isPressed))
-            .clipShape(RoundedRectangle(cornerRadius: 9))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(kind == .secondary ? Theme.accent.opacity(0.35) : Color.clear,
+                            lineWidth: 1)
+            )
+            .shadow(color: kind == .primary ? Theme.accent.opacity(enabled ? 0.35 : 0) : .clear,
+                    radius: 8, y: 3)
             .opacity(enabled ? 1 : 0.4)
+            .scaleEffect(configuration.isPressed ? 0.985 : 1)
+            .animation(.easeOut(duration: 0.1), value: configuration.isPressed)
     }
 
     @ViewBuilder
@@ -392,7 +440,7 @@ private struct PillButton: ButtonStyle {
                                 : [Theme.accent, Theme.accentDeep],
                 startPoint: .top, endPoint: .bottom)
         case .secondary:
-            Theme.accent.opacity(pressed ? 0.22 : 0.12)
+            Theme.accent.opacity(pressed ? 0.20 : 0.10)
         }
     }
 }

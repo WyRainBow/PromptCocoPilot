@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: claude_ui
-title: 跨语言会话感知悬浮交互层
+title: Claude Code 跨语言悬浮增强 UI
 scope:
     - claude-ui/
 source_files: []

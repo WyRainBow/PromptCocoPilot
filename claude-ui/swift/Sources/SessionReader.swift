@@ -2,7 +2,7 @@ import Foundation
 
 /// Which agent a session belongs to (shown as a badge; lets one island switch
 /// between Claude Code / Codex / … conversations, like CodeIsland).
-enum AgentKind: String { case claude = "Claude", codex = "Codex" }
+enum AgentKind: String { case claude = "Claude", codex = "Codex", qoder = "Qoder" }
 
 /// A single conversation turn, mirroring the Python session_reader payload
 /// ({role, content, ts}) so the enhance server receives an identical shape.
@@ -23,10 +23,11 @@ struct SessionInfo: Identifiable {
     let messageCount: Int
     let status: String      // "busy" for Claude; "" otherwise
     let logPath: String     // conversation log to read for context
+    let sid: String         // short session/conversation id (disambiguates 同名会话)
 
     var menuLabel: String {
         let busy = status == "busy" ? "🔴 " : ""
-        return "\(busy)\(name) · \(pathTail) · \(ago) · \(messageCount)条"
+        return "\(busy)\(name) · \(pathTail) · \(ago) · \(messageCount)条 · \(sid)"
     }
 }
 
@@ -86,7 +87,7 @@ enum SessionReader {
         return parts.count >= 2 ? parts.suffix(2).joined(separator: "/") : cwd
     }
 
-    private static func tailLines(_ url: URL, cap: Int = 1_000_000) -> [Substring] {
+    private static func tailLines(_ url: URL, cap: Int = 2_000_000) -> [Substring] {
         guard let data = tailData(url, maxBytes: cap) else { return [] }
         let text = String(decoding: data, as: UTF8.self)
         var lines = text.split(separator: "\n", omittingEmptySubsequences: true)
@@ -116,8 +117,9 @@ enum SessionReader {
             var body = ""
             if let s = content as? String { body = s }
             else if let parts = content as? [[String: Any]] {
-                body = parts.filter { ($0["type"] as? String) == "text" }
-                    .compactMap { $0["text"] as? String }.joined(separator: "\n")
+                // Take every text block (tool_use blocks have no "text" → skipped).
+                // Works for both Claude and Qoder transcripts.
+                body = parts.compactMap { $0["text"] as? String }.joined(separator: "\n")
             }
             body = body.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !body.isEmpty else { continue }
@@ -143,8 +145,9 @@ enum SessionReader {
                 id: "claude:\(sid)", agent: .claude, cwd: cwd,
                 name: (cwd as NSString).lastPathComponent.isEmpty ? "未知项目" : (cwd as NSString).lastPathComponent,
                 pathTail: pathTail(cwd), ago: relativeTime(activity),
-                messageCount: parseClaude(url, max: 20).count,
-                status: obj["status"] as? String ?? "", logPath: url.path)
+                messageCount: parseClaude(url, max: 40).count,
+                status: obj["status"] as? String ?? "", logPath: url.path,
+                sid: String(sid.prefix(8)))
             out.append((info, activity))
         }
         return out
@@ -219,8 +222,59 @@ enum SessionReader {
                 id: "codex:\(sid)", agent: .codex, cwd: cwd,
                 name: name.isEmpty ? "Codex 会话" : name,
                 pathTail: pathTail(cwd), ago: relativeTime(activity),
-                messageCount: parseCodex(url, max: 20).count,
-                status: "", logPath: url.path)
+                messageCount: parseCodex(url, max: 40).count,
+                status: "", logPath: url.path, sid: String(sid.prefix(8)))
+            out.append((info, activity))
+        }
+        return out
+    }
+
+    // MARK: - Qoder source
+    // Qoder (a Claude-compatible fork) stores transcripts at
+    // ~/.qoder/projects/**/*.jsonl in the same JSONL format, but with no
+    // sessions/*.json index — so scan the project dirs directly (like Codex).
+
+    /// cwd lives in the transcript body; scan the first lines for it.
+    private static func qoderCwd(_ url: URL) -> String? {
+        guard let h = try? FileHandle(forReadingFrom: url),
+              let data = try? h.read(upToCount: 200_000) else { return nil }
+        try? h.close()
+        let text = String(decoding: data, as: UTF8.self)
+        for line in text.split(separator: "\n", omittingEmptySubsequences: true).prefix(60) {
+            if let o = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any],
+               let cwd = o["cwd"] as? String, !cwd.isEmpty {
+                return cwd
+            }
+        }
+        return nil
+    }
+
+    private static func qoderCandidates(limit: Int = 8) -> [(SessionInfo, Double)] {
+        let base = codexDir.deletingLastPathComponent().appendingPathComponent(".qoder/projects")
+        guard let en = FileManager.default.enumerator(
+            at: base, includingPropertiesForKeys: [.contentModificationDateKey],
+            options: [.skipsHiddenFiles]) else { return [] }
+        var files: [(URL, Double)] = []
+        for case let url as URL in en where url.pathExtension == "jsonl" {
+            files.append((url, mtimeMs(url)))
+        }
+        files.sort { $0.1 > $1.1 }
+        files = Array(files.prefix(limit))
+
+        var out: [(SessionInfo, Double)] = []
+        for (url, activity) in files {
+            let cwd = qoderCwd(url) ?? ""
+            let name = (cwd as NSString).lastPathComponent
+            // sid from filename: drop a "task-" prefix, take the leading token.
+            let stem = url.deletingPathExtension().lastPathComponent
+            let token = stem.split(separator: ".").first.map(String.init) ?? stem
+            let sid = String(token.replacingOccurrences(of: "task-", with: "").prefix(8))
+            let info = SessionInfo(
+                id: "qoder:\(stem)", agent: .qoder, cwd: cwd,
+                name: name.isEmpty ? "Qoder 会话" : name,
+                pathTail: pathTail(cwd), ago: relativeTime(activity),
+                messageCount: parseClaude(url, max: 40).count,
+                status: "", logPath: url.path, sid: sid)
             out.append((info, activity))
         }
         return out
@@ -230,12 +284,12 @@ enum SessionReader {
 
     /// Merged, most-recently-active-first list across all agents.
     static func list(max: Int = 12) -> [SessionInfo] {
-        let merged = claudeCandidates() + codexCandidates()
+        let merged = claudeCandidates() + codexCandidates() + qoderCandidates()
         return merged.sorted { $0.1 > $1.1 }.prefix(max).map { $0.0 }
     }
 
     /// Conversation + newest-first preview for a session log.
-    static func context(logPath: String, agent: AgentKind, max: Int = 20)
+    static func context(logPath: String, agent: AgentKind, max: Int = 40)
         -> (turns: [Turn], preview: [PreviewItem]) {
         let url = URL(fileURLWithPath: logPath)
         let turns = agent == .codex ? parseCodex(url, max: max) : parseClaude(url, max: max)
