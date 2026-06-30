@@ -5,6 +5,12 @@ import RiveRuntime
 /// source, including its animations. Switches the .riv to follow the app's
 /// MascotState (idle blink / thinking / done fireworks). Falls back to the
 /// hand-drawn `CloudView` if a .riv can't be loaded.
+///
+/// Key insight from riv_diag:
+///   Every .riv file has a `blink` boolean SM input. Default is false (no blink).
+///   Setting it to true enables the blink/lid animation cycle. This is why
+///   hover worked: something was setting it. We set it unconditionally on
+///   VM creation so blinking always works regardless of state machine entry.
 struct RiveCloudView: View {
     @EnvironmentObject var state: AppState
     @State private var vm: RiveViewModel?
@@ -18,7 +24,6 @@ struct RiveCloudView: View {
                 CloudView()
             }
         }
-        // Let taps/drags fall through to the parent (double-click expand, drag).
         .allowsHitTesting(false)
         .onAppear { reload(state.mascot) }
         .onChange(of: state.mascot) { _, new in reload(new) }
@@ -30,61 +35,50 @@ struct RiveCloudView: View {
         vm = RiveCloudView.make(s)
     }
 
-    /// (file, artboard, animationName) per mascot state.
-    /// Prefer `animationName` over `stateMachineName` for looping/idle animations;
-    /// use `stateMachineName` only for artboards with no suitable looping animation.
+    /// (file, artboard, stateMachine) per mascot state.
+    /// Artboard/SM names extracted from .riv files via `riv_diag`.
     @MainActor
     static func make(_ s: MascotState) -> RiveViewModel? {
-        let cfg: (file: String, artboard: String, anim: String?, sm: String?)
+        let cfg: (file: String, artboard: String?, sm: String?)
         switch s {
-        // ── Core lifecycle ───────────────────────────────────────────
-        // idle: play Timeline 1 (controls the blink/lid-up cycle).
-        case .idle:          cfg = ("IPDefaultIdle",           "idle",           "Timeline 1", nil)
-        // thinking/routing/outputting: no looping animation → fall back to SM.
-        case .thinking:      cfg = ("IPDefaultThinking",        "thinking",       nil, "Thinking")
-        case .routing:       cfg = ("IPDefaultRouting",        "routing",        nil, "routing")
-        case .listening:     cfg = ("IPDefaultListening",      "listening",      nil, "Listen")
-        case .outputting:    cfg = ("IPDefaultOutputting",     "outputting",     nil, "Outputting")
-        case .done:          cfg = ("IPDefaultDone",           "task complete",  nil, "Task Complete")
-        case .error:         cfg = ("IPDefaultError",          "error",         nil, "error")
-
-        // ── Input branch ─────────────────────────────────────────────
-        case .typing:        cfg = ("IPDefaultTyping",         "typing",         nil, "Typing")
-
-        // ── Authorization branch ─────────────────────────────────────
-        case .authorization: cfg = ("IPDefaultAuthorization",   "authorization",  nil, "authorization")
-
-        // ── Notification / background ─────────────────────────────────
-        case .recording:     cfg = ("IPDefaultWaveform",       "recording",      nil, "Recording")
-        case .notification:  cfg = ("IPDefaultNotification",    "notification",   nil, "notification")
-        case .sparkle:       cfg = ("IPDefaultSparkle",        "agent background", nil, "Agent background")
-
-        // ── UI feedback ─────────────────────────────────────────────
-        case .acknowledge:    cfg = ("IPDefaultAcknowledge",    "task done",      nil, "Task done")
-        case .backgroundHint: cfg = ("IPDefaultBackgroundHint","background hint", nil, "background hint")
-        case .help:          cfg = ("IPDefaultHelp",           "ask human",      nil, "Ask Human")
+        case .idle:          cfg = ("IPDefaultIdle",           "idle",          "State Machine 1")
+        case .thinking:      cfg = ("IPDefaultThinking",        nil,             "Thinking")
+        case .routing:      cfg = ("IPDefaultRouting",         nil,             "routing")
+        case .listening:     cfg = ("IPDefaultListening",      nil,             "Listen")
+        case .outputting:    cfg = ("IPDefaultOutputting",     nil,             "Outputting")
+        case .done:          cfg = ("IPDefaultDone",           "task complete",  "Task Complete")
+        case .error:         cfg = ("IPDefaultError",          nil,             "error")
+        case .typing:        cfg = ("IPDefaultTyping",         nil,             "Typing")
+        case .authorization: cfg = ("IPDefaultAuthorization",   nil,             "authorization")
+        case .recording:     cfg = ("IPDefaultWaveform",       nil,             "Recording")
+        case .notification:  cfg = ("IPDefaultNotification",   nil,             "notification")
+        case .sparkle:       cfg = ("IPDefaultSparkle",        nil,             "Agent background")
+        case .acknowledge:    cfg = ("IPDefaultAcknowledge",    nil,             "Task done")
+        case .backgroundHint: cfg = ("IPDefaultBackgroundHint", nil,             "background hint")
+        case .help:          cfg = ("IPDefaultHelp",          nil,             "Ask Human")
         }
         guard let url = rivURL(cfg.file),
               let data = try? Data(contentsOf: url),
               let file = try? RiveFile(data: data, loadCdn: false)
         else { return nil }
 
-        // Prefer animation name (for looping/idle animations); fall back to SM.
-        if let anim = cfg.anim {
-            return RiveViewModel(RiveModel(riveFile: file),
-                                 animationName: anim,
-                                 fit: .contain,
-                                 artboardName: cfg.artboard)
-        } else if let sm = cfg.sm {
-            return RiveViewModel(RiveModel(riveFile: file),
-                                 stateMachineName: sm,
-                                 fit: .contain,
-                                 artboardName: cfg.artboard)
+        let vm: RiveViewModel?
+        if let ab = cfg.artboard {
+            vm = RiveViewModel(RiveModel(riveFile: file),
+                               stateMachineName: cfg.sm,
+                               fit: .contain,
+                               artboardName: ab)
+        } else {
+            vm = RiveViewModel(RiveModel(riveFile: file),
+                               stateMachineName: cfg.sm,
+                               fit: .contain)
         }
-        return nil
+        // Enable blinking on every state that has a `blink` boolean input.
+        // Without this, the SM entry state defaults to `no blink` (false).
+        vm?.setInput("blink", value: true)
+        return vm
     }
 
-    /// The .riv files sit next to the executable (copied there by build.sh).
     private static func rivURL(_ name: String) -> URL? {
         let dir = Bundle.main.executableURL?.deletingLastPathComponent()
         let u = dir?.appendingPathComponent("\(name).riv")
