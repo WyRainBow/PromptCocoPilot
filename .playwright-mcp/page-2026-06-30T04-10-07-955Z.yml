@@ -1,0 +1,1060 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - link "Product Hunt Logo" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - img [ref=e7]
+        - generic [ref=e11]:
+          - img [ref=e12]
+          - textbox "Search" [ref=e14] [cursor=pointer]
+      - navigation "Main Navigation" [ref=e15]:
+        - list [ref=e16]:
+          - listitem [ref=e17]:
+            - link "Best Products" [ref=e18] [cursor=pointer]:
+              - /url: /categories?ref=header_nav
+              - text: Best Products
+              - img [ref=e19]
+          - listitem [ref=e21]:
+            - link "Launches" [ref=e22] [cursor=pointer]:
+              - /url: /leaderboard/daily/2026/6/29?ref=header_nav
+              - text: Launches
+              - img [ref=e23]
+          - listitem [ref=e25]:
+            - link "News" [ref=e26] [cursor=pointer]:
+              - /url: /newsletters?ref=header_nav
+              - text: News
+              - img [ref=e27]
+          - listitem [ref=e29]:
+            - link "Forums" [ref=e30] [cursor=pointer]:
+              - /url: /forums?ref=header_nav
+              - text: Forums
+              - img [ref=e31]
+          - listitem [ref=e33]:
+            - link "Advertise" [ref=e34] [cursor=pointer]:
+              - /url: /sponsor?ref=header_nav
+      - generic [ref=e35]:
+        - link "Subscribe" [ref=e36] [cursor=pointer]:
+          - /url: /newsletters?ref=header_nav&campaign=weekly_newsletter&source=header_nav
+          - img [ref=e37]
+          - text: Subscribe
+        - button "Sign in" [ref=e39] [cursor=pointer]:
+          - img [ref=e40]
+          - text: Sign in
+  - generic [ref=e44]:
+    - main [ref=e45]:
+      - generic [ref=e46]:
+        - generic [ref=e47]:
+          - generic [ref=e49]:
+            - img "Invoko" [ref=e50]
+            - generic [ref=e51]:
+              - heading "Invoko" [level=1] [ref=e53]
+              - generic [ref=e54]:
+                - heading "A little hand on your Mac" [level=2] [ref=e55]
+                - paragraph [ref=e57]: 1.3K followers
+          - link "Visit website" [ref=e59] [cursor=pointer]:
+            - /url: https://invoko.ai/?ref=producthunt
+        - generic [ref=e61]: Invoko is an AI desktop helper you can talk to while you work. Bring it beside anything on your screen, ask it questions, or let it handle tasks across your apps.
+        - list [ref=e62]:
+          - listitem [ref=e63]:
+            - link "Overview" [ref=e64] [cursor=pointer]:
+              - /url: /products/invoko
+              - generic [ref=e65]: Overview
+          - listitem [ref=e66]:
+            - link "Reviews" [ref=e67] [cursor=pointer]:
+              - /url: /products/invoko/reviews
+              - generic [ref=e68]: Reviews
+          - listitem [ref=e69]:
+            - link "Alternatives" [ref=e70] [cursor=pointer]:
+              - /url: /products/invoko/alternatives
+              - generic [ref=e71]: Alternatives
+          - listitem [ref=e72]:
+            - link "Built with" [ref=e73] [cursor=pointer]:
+              - /url: /products/invoko/built-with
+              - generic [ref=e74]: Built with
+          - listitem [ref=e75]:
+            - link "Team" [ref=e76] [cursor=pointer]:
+              - /url: /products/invoko/makers
+              - generic [ref=e77]: Team
+          - listitem [ref=e78]:
+            - link "Awards" [ref=e79] [cursor=pointer]:
+              - /url: /products/invoko/awards
+              - generic [ref=e80]: Awards
+          - listitem [ref=e81]:
+            - button "More" [ref=e82] [cursor=pointer]
+      - generic [ref=e83]:
+        - generic [ref=e86]:
+          - img [ref=e87] [cursor=pointer]
+          - generic [ref=e91]:
+            - generic "Invoko gallery media" [ref=e92] [cursor=pointer]:
+              - img "Invoko gallery image" [ref=e94]
+            - generic "Invoko gallery media" [ref=e95] [cursor=pointer]:
+              - img "Invoko gallery image" [ref=e97]
+            - generic "Invoko gallery media" [ref=e98] [cursor=pointer]:
+              - img "Invoko gallery image" [ref=e100]
+            - generic "Invoko gallery media" [ref=e101] [cursor=pointer]:
+              - img "Invoko gallery image" [ref=e103]
+            - generic "Invoko gallery media" [ref=e104] [cursor=pointer]:
+              - img "Invoko gallery image" [ref=e106]
+            - generic "Invoko gallery media" [ref=e107] [cursor=pointer]:
+              - img "Invoko gallery image" [ref=e109]
+            - generic "Invoko gallery media" [ref=e110] [cursor=pointer]:
+              - img "Invoko gallery image" [ref=e112]
+        - generic [ref=e114]:
+          - generic [ref=e115]: Free
+          - generic [ref=e117]:
+            - generic [ref=e118]: "Launch tags:"
+            - img [ref=e119]
+            - link "Mac" [ref=e121] [cursor=pointer]:
+              - /url: /topics/mac
+            - generic [ref=e122]: •
+            - link "Productivity" [ref=e123] [cursor=pointer]:
+              - /url: /topics/productivity
+            - generic [ref=e124]: •
+            - link "Artificial Intelligence" [ref=e125] [cursor=pointer]:
+              - /url: /topics/artificial-intelligence
+        - generic [ref=e128]:
+          - img [ref=e130]
+          - generic [ref=e132]: Launch Team / Built With
+          - generic [ref=e133]:
+            - link "Kevin William David" [ref=e134] [cursor=pointer]:
+              - /url: /@kevin
+              - button "Kevin William David" [ref=e135]:
+                - img "Kevin William David" [ref=e136]
+              - img [ref=e137]
+            - link "Alex Zhao" [ref=e141] [cursor=pointer]:
+              - /url: /@alex_tao
+              - button "Alex Zhao" [ref=e142]:
+                - img "Alex Zhao" [ref=e143]
+              - img [ref=e144]
+            - link "Monica Cheng" [ref=e148] [cursor=pointer]:
+              - /url: /@monica_cheng1
+              - button "Monica Cheng" [ref=e149]:
+                - img "Monica Cheng" [ref=e150]
+              - img [ref=e151]
+            - button "Claude Code" [ref=e155] [cursor=pointer]:
+              - link "Claude Code" [ref=e156]:
+                - /url: /products/claude-code
+                - img "Claude Code" [ref=e157]
+            - button "Codex 3.0 by OpenAI" [ref=e158] [cursor=pointer]:
+              - link "Codex 3.0 by OpenAI" [ref=e159]:
+                - /url: /products/codex-3-0-by-openai
+                - img "Codex 3.0 by OpenAI" [ref=e160]
+            - button "Linear" [ref=e161] [cursor=pointer]:
+              - link "Linear" [ref=e162]:
+                - /url: /products/linear
+                - img "Linear" [ref=e163]
+            - button "Show more" [ref=e164] [cursor=pointer]:
+              - text: Show more
+              - img [ref=e165]
+        - generic [ref=e167]:
+          - generic [ref=e170] [cursor=pointer]:
+            - generic [ref=e172]:
+              - generic [ref=e173]:
+                - 'img "Wispr Flow: Dictation That Works Everywhere" [ref=e174]'
+                - generic [ref=e175]:
+                  - generic [ref=e176]: "Wispr Flow: Dictation That Works Everywhere"
+                  - generic [ref=e177]: Stop typing. Start speaking. 4x faster.
+              - 'button "Try Wispr Flow: Dictation That Works Everywhere" [ref=e178]':
+                - generic [ref=e179]: "Try Wispr Flow: Dictation That Works Everywhere"
+            - generic [ref=e180]: Promoted
+          - generic [ref=e183]:
+            - paragraph [ref=e184]: What do you think? …
+            - generic [ref=e185]:
+              - button "Mention user or product" [ref=e187] [cursor=pointer]:
+                - img [ref=e188]
+              - button "Login to comment" [ref=e191] [cursor=pointer]
+          - generic [ref=e192]:
+            - generic [ref=e195]:
+              - button "Alex Zhao" [ref=e196] [cursor=pointer]:
+                - img "Alex Zhao" [ref=e197]
+              - generic [ref=e198]:
+                - generic [ref=e199]:
+                  - button "Alex Zhao" [ref=e200] [cursor=pointer]:
+                    - link "Alex Zhao" [ref=e201]:
+                      - /url: /@alex_tao
+                  - button "Clico Clico" [ref=e202] [cursor=pointer]:
+                    - link "Clico Clico" [ref=e203]:
+                      - /url: /products/clico
+                      - img "Clico" [ref=e204]
+                      - paragraph [ref=e205]: Clico
+                  - generic [ref=e206]:
+                    - img [ref=e207]
+                    - text: Maker
+                  - generic [ref=e209]: 📌
+                - paragraph [ref=e213]:
+                  - text: Hey Product Hunt,
+                  - text: "We are bacccck again! This time I'd like to introduce our latest product: Invoko."
+                  - text: "When dealing with everyday tasks, we'd always feel overwhelmed with a lot of distractions: multiple agent sessions running at the same time, messages from slack popping up all day, colleges asking for quick calls out of nowhere, isn't it nice to have someone or something to handle these and sort them out for you?"
+                  - text: That's the reason we build Invoko.
+                  - text: Invoko is a desktop agent lives on your mac that you can talk to while working. By simply pressing a shortcut (Fn), you can dispatch all the tasks that you don't want to handle to it. No matter it's sorting your emails and extract todo lists, or scheduling calendar to avoid those annoying quick calls, or simply replying to messages that you don't want to engage, Invoko got your back.
+                  - text: It's fully local deployed on your mac, which means it can easily understand what you are doing right now and what's your intention. It can operate across all your apps with full functionalities and zero privacy concern.
+                  - text: "We've put around 3 months to build Invoko and have iterated 71 times till this morning (based on the version # lol)"
+                  - text: It's something that we use daily within our team and we genuinely think that it can benefit ppl with the same pain points and passion.
+                  - text: "For trying it out, please head to:"
+                  - button "https://invoko.ai/?utm_source=ph&utm_medium=referral&utm_campaign=june" [ref=e214] [cursor=pointer]
+                  - text: (We use utm to track the incoming traffic more precisely FYI)
+                  - text: If you find any issue or bug, please reach out to
+                  - button "hey@invoko.ai" [ref=e215] [cursor=pointer]
+                  - text: . We read & reply to every user email manually (100% hand written)
+                  - text: Hope you like it and we can't wait to hear your thoughts!
+                - generic [ref=e218]:
+                  - button "Upvote (27)" [ref=e219] [cursor=pointer]:
+                    - img [ref=e220]
+                    - generic [ref=e223]: Upvote
+                    - text: (27)
+                  - button "Report" [ref=e224] [cursor=pointer]:
+                    - generic [ref=e225]:
+                      - img [ref=e226]
+                      - generic [ref=e228]: Report
+                  - button "Share" [ref=e229] [cursor=pointer]:
+                    - button "Share" [ref=e230]:
+                      - img [ref=e231]
+                      - generic [ref=e233]: Share
+                  - generic [ref=e234]:
+                    - img [ref=e235]
+                    - time [ref=e238]: 27d ago
+                  - button [ref=e239] [cursor=pointer]:
+                    - img [ref=e240]
+            - generic [ref=e245]:
+              - img [ref=e247] [cursor=pointer]
+              - generic [ref=e251]:
+                - button "Abdul Rehman" [ref=e252] [cursor=pointer]:
+                  - img "Abdul Rehman" [ref=e253]
+                - generic [ref=e254]:
+                  - generic [ref=e255]:
+                    - button "Abdul Rehman" [ref=e256] [cursor=pointer]:
+                      - link "Abdul Rehman" [ref=e257]:
+                        - /url: /@abod_rehman
+                    - img [ref=e259]
+                    - button "Triforce Todos Triforce Todos" [ref=e263] [cursor=pointer]:
+                      - link "Triforce Todos Triforce Todos" [ref=e264]:
+                        - /url: /products/triforce-todos
+                        - img "Triforce Todos" [ref=e265]
+                        - paragraph [ref=e266]: Triforce Todos
+                  - paragraph [ref=e270]:
+                    - text: 71 versions in 3 months is wild, honestly 😅
+                    - text: what was the biggest thing that changed between the early builds and what launched today?
+                  - generic [ref=e273]:
+                    - button "Upvote (10)" [ref=e274] [cursor=pointer]:
+                      - img [ref=e275]
+                      - generic [ref=e278]: Upvote
+                      - text: (10)
+                    - button "Report" [ref=e279] [cursor=pointer]:
+                      - generic [ref=e280]:
+                        - img [ref=e281]
+                        - generic [ref=e283]: Report
+                    - button "Share" [ref=e284] [cursor=pointer]:
+                      - button "Share" [ref=e285]:
+                        - img [ref=e286]
+                        - generic [ref=e288]: Share
+                    - generic [ref=e289]:
+                      - img [ref=e290]
+                      - time [ref=e293]: 14d ago
+                    - button [ref=e294] [cursor=pointer]:
+                      - img [ref=e295]
+              - generic [ref=e303]:
+                - button "Alex Zhao" [ref=e305] [cursor=pointer]:
+                  - img "Alex Zhao" [ref=e306]
+                - generic [ref=e307]:
+                  - generic [ref=e308]:
+                    - button "Alex Zhao" [ref=e309] [cursor=pointer]:
+                      - link "Alex Zhao" [ref=e310]:
+                        - /url: /@alex_tao
+                    - button "Clico Clico" [ref=e311] [cursor=pointer]:
+                      - link "Clico Clico" [ref=e312]:
+                        - /url: /products/clico
+                        - img "Clico" [ref=e313]
+                        - paragraph [ref=e314]: Clico
+                    - generic [ref=e315]:
+                      - img [ref=e316]
+                      - text: Maker
+                  - paragraph [ref=e321]:
+                    - button "@abod_rehman" [ref=e322] [cursor=pointer]
+                    - text: Hey Abdul, thanks for the kind word! Actually the product is nothing like the initial version, UI wise and feature wise. We narrow it down to focus more on productivity scenarios and give it the capability to fetch context and memorize your preference so that it understands you better. Have a try and let us know what you think!
+                  - generic [ref=e325]:
+                    - button "Upvote" [ref=e326] [cursor=pointer]:
+                      - img [ref=e327]
+                      - generic [ref=e330]: Upvote
+                    - button "Report" [ref=e331] [cursor=pointer]:
+                      - generic [ref=e332]:
+                        - img [ref=e333]
+                        - generic [ref=e335]: Report
+                    - button "Share" [ref=e336] [cursor=pointer]:
+                      - button "Share" [ref=e337]:
+                        - img [ref=e338]
+                        - generic [ref=e340]: Share
+                    - generic [ref=e341]:
+                      - img [ref=e342]
+                      - time [ref=e345]: 14d ago
+                    - button [ref=e346] [cursor=pointer]:
+                      - img [ref=e347]
+            - generic [ref=e352]:
+              - img [ref=e354] [cursor=pointer]
+              - generic [ref=e358]:
+                - button "Florent Berrez" [ref=e359] [cursor=pointer]:
+                  - img "Florent Berrez" [ref=e360]
+                - generic [ref=e361]:
+                  - generic [ref=e362]:
+                    - button "Florent Berrez" [ref=e363] [cursor=pointer]:
+                      - link "Florent Berrez" [ref=e364]:
+                        - /url: /@fberrez1
+                    - img [ref=e366]
+                    - button "Foyer Foyer" [ref=e370] [cursor=pointer]:
+                      - link "Foyer Foyer" [ref=e371]:
+                        - /url: /products/foyer-4
+                        - img "Foyer" [ref=e372]
+                        - paragraph [ref=e373]: Foyer
+                  - paragraph [ref=e377]: The "little hand on your Mac" framing is deliberately vague, so I'm genuinely not sure what this does from the listing alone. Is Invoko more like a system-wide AI layer that acts on whatever's on screen, or is it closer to a launcher that routes specific tasks to specific tools? That distinction matters a lot for how much you'd actually trust it to touch things without reviewing what it's about to do.
+                  - generic [ref=e380]:
+                    - button "Upvote (9)" [ref=e381] [cursor=pointer]:
+                      - img [ref=e382]
+                      - generic [ref=e385]: Upvote
+                      - text: (9)
+                    - button "Report" [ref=e386] [cursor=pointer]:
+                      - generic [ref=e387]:
+                        - img [ref=e388]
+                        - generic [ref=e390]: Report
+                    - button "Share" [ref=e391] [cursor=pointer]:
+                      - button "Share" [ref=e392]:
+                        - img [ref=e393]
+                        - generic [ref=e395]: Share
+                    - generic [ref=e396]:
+                      - img [ref=e397]
+                      - time [ref=e400]: 14d ago
+                    - button [ref=e401] [cursor=pointer]:
+                      - img [ref=e402]
+              - generic [ref=e410]:
+                - button "Alex Zhao" [ref=e412] [cursor=pointer]:
+                  - img "Alex Zhao" [ref=e413]
+                - generic [ref=e414]:
+                  - generic [ref=e415]:
+                    - button "Alex Zhao" [ref=e416] [cursor=pointer]:
+                      - link "Alex Zhao" [ref=e417]:
+                        - /url: /@alex_tao
+                    - button "Clico Clico" [ref=e418] [cursor=pointer]:
+                      - link "Clico Clico" [ref=e419]:
+                        - /url: /products/clico
+                        - img "Clico" [ref=e420]
+                        - paragraph [ref=e421]: Clico
+                    - generic [ref=e422]:
+                      - img [ref=e423]
+                      - text: Maker
+                  - paragraph [ref=e428]:
+                    - button "@fberrez1" [ref=e429] [cursor=pointer]
+                    - text: Hey Florent, it's rly insightful. Currently Invoko acts as a system wide AI layer instead of a task router. We're working on narrowing the product perception rn so that it can be more clear and intuitive. Stay tuned:)
+                  - generic [ref=e432]:
+                    - button "Upvote" [ref=e433] [cursor=pointer]:
+                      - img [ref=e434]
+                      - generic [ref=e437]: Upvote
+                    - button "Report" [ref=e438] [cursor=pointer]:
+                      - generic [ref=e439]:
+                        - img [ref=e440]
+                        - generic [ref=e442]: Report
+                    - button "Share" [ref=e443] [cursor=pointer]:
+                      - button "Share" [ref=e444]:
+                        - img [ref=e445]
+                        - generic [ref=e447]: Share
+                    - generic [ref=e448]:
+                      - img [ref=e449]
+                      - time [ref=e452]: 14d ago
+                    - button [ref=e453] [cursor=pointer]:
+                      - img [ref=e454]
+            - generic [ref=e459]:
+              - img [ref=e461] [cursor=pointer]
+              - generic [ref=e465]:
+                - button "chengfeng" [ref=e466] [cursor=pointer]:
+                  - img "chengfeng" [ref=e467]
+                - generic [ref=e468]:
+                  - button "chengfeng" [ref=e470] [cursor=pointer]:
+                    - link "chengfeng" [ref=e471]:
+                      - /url: /@chengfeng
+                  - paragraph [ref=e475]: Congrats! Curious how does Invoko handle context switching when you're jumping between unrelated tasks and suddenly press Fn to delegate something?
+                  - generic [ref=e478]:
+                    - button "Upvote (6)" [ref=e479] [cursor=pointer]:
+                      - img [ref=e480]
+                      - generic [ref=e483]: Upvote
+                      - text: (6)
+                    - button "Report" [ref=e484] [cursor=pointer]:
+                      - generic [ref=e485]:
+                        - img [ref=e486]
+                        - generic [ref=e488]: Report
+                    - button "Share" [ref=e489] [cursor=pointer]:
+                      - button "Share" [ref=e490]:
+                        - img [ref=e491]
+                        - generic [ref=e493]: Share
+                    - generic [ref=e494]:
+                      - img [ref=e495]
+                      - time [ref=e498]: 14d ago
+                    - button [ref=e499] [cursor=pointer]:
+                      - img [ref=e500]
+              - generic [ref=e508]:
+                - button "Alex Zhao" [ref=e510] [cursor=pointer]:
+                  - img "Alex Zhao" [ref=e511]
+                - generic [ref=e512]:
+                  - generic [ref=e513]:
+                    - button "Alex Zhao" [ref=e514] [cursor=pointer]:
+                      - link "Alex Zhao" [ref=e515]:
+                        - /url: /@alex_tao
+                    - button "Clico Clico" [ref=e516] [cursor=pointer]:
+                      - link "Clico Clico" [ref=e517]:
+                        - /url: /products/clico
+                        - img "Clico" [ref=e518]
+                        - paragraph [ref=e519]: Clico
+                    - generic [ref=e520]:
+                      - img [ref=e521]
+                      - text: Maker
+                  - paragraph [ref=e526]:
+                    - button "@chengfeng" [ref=e527] [cursor=pointer]
+                    - text: "Hey there, quote my previous answer: We mainly use your mac's current focus to understand your intention, combined with a relative long term memory. Also the model's inference capability is quite good to understand and execute the task that you delegate to it so it's not a problem for now:)"
+                  - generic [ref=e530]:
+                    - button "Upvote (2)" [ref=e531] [cursor=pointer]:
+                      - img [ref=e532]
+                      - generic [ref=e535]: Upvote
+                      - text: (2)
+                    - button "Report" [ref=e536] [cursor=pointer]:
+                      - generic [ref=e537]:
+                        - img [ref=e538]
+                        - generic [ref=e540]: Report
+                    - button "Share" [ref=e541] [cursor=pointer]:
+                      - button "Share" [ref=e542]:
+                        - img [ref=e543]
+                        - generic [ref=e545]: Share
+                    - generic [ref=e546]:
+                      - img [ref=e547]
+                      - time [ref=e550]: 14d ago
+                    - button [ref=e551] [cursor=pointer]:
+                      - img [ref=e552]
+            - generic [ref=e557]:
+              - img [ref=e559] [cursor=pointer]
+              - generic [ref=e563]:
+                - button "Amna" [ref=e564] [cursor=pointer]:
+                  - img "Amna" [ref=e565]
+                - generic [ref=e566]:
+                  - button "Amna" [ref=e568] [cursor=pointer]:
+                    - link "Amna" [ref=e569]:
+                      - /url: /@amna9
+                  - paragraph [ref=e573]: The beside anything on your screen positioning is really interesting how does Invoko handle context awareness across different app types like jumping from a spreadsheet to a browser tab to a design tool without losing the thread of what you're working on?
+                  - generic [ref=e576]:
+                    - button "Upvote (4)" [ref=e577] [cursor=pointer]:
+                      - img [ref=e578]
+                      - generic [ref=e581]: Upvote
+                      - text: (4)
+                    - button "Report" [ref=e582] [cursor=pointer]:
+                      - generic [ref=e583]:
+                        - img [ref=e584]
+                        - generic [ref=e586]: Report
+                    - button "Share" [ref=e587] [cursor=pointer]:
+                      - button "Share" [ref=e588]:
+                        - img [ref=e589]
+                        - generic [ref=e591]: Share
+                    - generic [ref=e592]:
+                      - img [ref=e593]
+                      - time [ref=e596]: 14d ago
+                    - button [ref=e597] [cursor=pointer]:
+                      - img [ref=e598]
+              - generic [ref=e606]:
+                - button "Alex Zhao" [ref=e608] [cursor=pointer]:
+                  - img "Alex Zhao" [ref=e609]
+                - generic [ref=e610]:
+                  - generic [ref=e611]:
+                    - button "Alex Zhao" [ref=e612] [cursor=pointer]:
+                      - link "Alex Zhao" [ref=e613]:
+                        - /url: /@alex_tao
+                    - button "Clico Clico" [ref=e614] [cursor=pointer]:
+                      - link "Clico Clico" [ref=e615]:
+                        - /url: /products/clico
+                        - img "Clico" [ref=e616]
+                        - paragraph [ref=e617]: Clico
+                    - generic [ref=e618]:
+                      - img [ref=e619]
+                      - text: Maker
+                  - paragraph [ref=e624]:
+                    - button "@amna9" [ref=e625] [cursor=pointer]
+                    - text: We build a memory layer for Invoko specifically, enabling it to distinguish between different task threads with different context. Making sure it can handle them all in parallel.
+                  - generic [ref=e628]:
+                    - button "Upvote" [ref=e629] [cursor=pointer]:
+                      - img [ref=e630]
+                      - generic [ref=e633]: Upvote
+                    - button "Report" [ref=e634] [cursor=pointer]:
+                      - generic [ref=e635]:
+                        - img [ref=e636]
+                        - generic [ref=e638]: Report
+                    - button "Share" [ref=e639] [cursor=pointer]:
+                      - button "Share" [ref=e640]:
+                        - img [ref=e641]
+                        - generic [ref=e643]: Share
+                    - generic [ref=e644]:
+                      - img [ref=e645]
+                      - time [ref=e648]: 14d ago
+                    - button [ref=e649] [cursor=pointer]:
+                      - img [ref=e650]
+            - generic [ref=e655]:
+              - img [ref=e657] [cursor=pointer]
+              - generic [ref=e661]:
+                - button "Xuefei Mei" [ref=e662] [cursor=pointer]:
+                  - img "Xuefei Mei" [ref=e663]
+                - generic [ref=e664]:
+                  - button "Xuefei Mei" [ref=e666] [cursor=pointer]:
+                    - link "Xuefei Mei" [ref=e667]:
+                      - /url: /@crystalmei
+                  - paragraph [ref=e671]: Congrats! Curious how does Invoko handle context switching when you're jumping between unrelated tasks and suddenly press Fn to delegate something?
+                  - generic [ref=e674]:
+                    - button "Upvote (3)" [ref=e675] [cursor=pointer]:
+                      - img [ref=e676]
+                      - generic [ref=e679]: Upvote
+                      - text: (3)
+                    - button "Report" [ref=e680] [cursor=pointer]:
+                      - generic [ref=e681]:
+                        - img [ref=e682]
+                        - generic [ref=e684]: Report
+                    - button "Share" [ref=e685] [cursor=pointer]:
+                      - button "Share" [ref=e686]:
+                        - img [ref=e687]
+                        - generic [ref=e689]: Share
+                    - generic [ref=e690]:
+                      - img [ref=e691]
+                      - time [ref=e694]: 14d ago
+                    - button [ref=e695] [cursor=pointer]:
+                      - img [ref=e696]
+              - generic [ref=e704]:
+                - button "Alex Zhao" [ref=e706] [cursor=pointer]:
+                  - img "Alex Zhao" [ref=e707]
+                - generic [ref=e708]:
+                  - generic [ref=e709]:
+                    - button "Alex Zhao" [ref=e710] [cursor=pointer]:
+                      - link "Alex Zhao" [ref=e711]:
+                        - /url: /@alex_tao
+                    - button "Clico Clico" [ref=e712] [cursor=pointer]:
+                      - link "Clico Clico" [ref=e713]:
+                        - /url: /products/clico
+                        - img "Clico" [ref=e714]
+                        - paragraph [ref=e715]: Clico
+                    - generic [ref=e716]:
+                      - img [ref=e717]
+                      - text: Maker
+                  - paragraph [ref=e722]:
+                    - button "@crystalmei" [ref=e723] [cursor=pointer]
+                    - text: Hey Xuefei, thanks for bringing that up. We mainly use your mac's current focus to understand your intention, combined with a relative long term memory. Also the model's inference capability is quite good to understand and execute the task that you delegate to it so it's not a problem for now:)
+                  - generic [ref=e726]:
+                    - button "Upvote (2)" [ref=e727] [cursor=pointer]:
+                      - img [ref=e728]
+                      - generic [ref=e731]: Upvote
+                      - text: (2)
+                    - button "Report" [ref=e732] [cursor=pointer]:
+                      - generic [ref=e733]:
+                        - img [ref=e734]
+                        - generic [ref=e736]: Report
+                    - button "Share" [ref=e737] [cursor=pointer]:
+                      - button "Share" [ref=e738]:
+                        - img [ref=e739]
+                        - generic [ref=e741]: Share
+                    - generic [ref=e742]:
+                      - img [ref=e743]
+                      - time [ref=e746]: 14d ago
+                    - button [ref=e747] [cursor=pointer]:
+                      - img [ref=e748]
+            - generic [ref=e753]:
+              - img [ref=e755] [cursor=pointer]
+              - generic [ref=e759]:
+                - button "James Carter" [ref=e760] [cursor=pointer]:
+                  - img "James Carter" [ref=e761]
+                - generic [ref=e762]:
+                  - button "James Carter" [ref=e764] [cursor=pointer]:
+                    - link "James Carter" [ref=e765]:
+                      - /url: /@james_carter35
+                  - generic [ref=e768]:
+                    - paragraph [ref=e769]: congratulations! building something your own team uses daily is always a great sign. what's been the most surprising use case discovered internally?
+                    - paragraph [ref=e770]
+                  - generic [ref=e773]:
+                    - button "Upvote (3)" [ref=e774] [cursor=pointer]:
+                      - img [ref=e775]
+                      - generic [ref=e778]: Upvote
+                      - text: (3)
+                    - button "Report" [ref=e779] [cursor=pointer]:
+                      - generic [ref=e780]:
+                        - img [ref=e781]
+                        - generic [ref=e783]: Report
+                    - button "Share" [ref=e784] [cursor=pointer]:
+                      - button "Share" [ref=e785]:
+                        - img [ref=e786]
+                        - generic [ref=e788]: Share
+                    - generic [ref=e789]:
+                      - img [ref=e790]
+                      - time [ref=e793]: 14d ago
+                    - button [ref=e794] [cursor=pointer]:
+                      - img [ref=e795]
+              - generic [ref=e803]:
+                - button "Alex Zhao" [ref=e805] [cursor=pointer]:
+                  - img "Alex Zhao" [ref=e806]
+                - generic [ref=e807]:
+                  - generic [ref=e808]:
+                    - button "Alex Zhao" [ref=e809] [cursor=pointer]:
+                      - link "Alex Zhao" [ref=e810]:
+                        - /url: /@alex_tao
+                    - button "Clico Clico" [ref=e811] [cursor=pointer]:
+                      - link "Clico Clico" [ref=e812]:
+                        - /url: /products/clico
+                        - img "Clico" [ref=e813]
+                        - paragraph [ref=e814]: Clico
+                    - generic [ref=e815]:
+                      - img [ref=e816]
+                      - text: Maker
+                  - paragraph [ref=e821]:
+                    - button "@james_carter35" [ref=e822] [cursor=pointer]
+                    - text: I would say it's the scheduler and auto reply, saving me 90% of the time trying to coordinate everyone's time and drafting replies. Huge W
+                  - generic [ref=e825]:
+                    - button "Upvote" [ref=e826] [cursor=pointer]:
+                      - img [ref=e827]
+                      - generic [ref=e830]: Upvote
+                    - button "Report" [ref=e831] [cursor=pointer]:
+                      - generic [ref=e832]:
+                        - img [ref=e833]
+                        - generic [ref=e835]: Report
+                    - button "Share" [ref=e836] [cursor=pointer]:
+                      - button "Share" [ref=e837]:
+                        - img [ref=e838]
+                        - generic [ref=e840]: Share
+                    - generic [ref=e841]:
+                      - img [ref=e842]
+                      - time [ref=e845]: 14d ago
+                    - button [ref=e846] [cursor=pointer]:
+                      - img [ref=e847]
+            - generic [ref=e852]:
+              - button "First" [disabled] [ref=e853]:
+                - img [ref=e854]
+                - generic [ref=e856]: First
+              - button "Previous" [disabled] [ref=e857]:
+                - img [ref=e858]
+                - generic [ref=e860]: Previous
+              - link "1" [ref=e861] [cursor=pointer]:
+                - /url: /products/invoko?#comments
+              - link "2" [ref=e862] [cursor=pointer]:
+                - /url: /products/invoko?page=2#comments
+              - link "3" [ref=e863] [cursor=pointer]:
+                - /url: /products/invoko?page=3#comments
+              - generic [ref=e864]: •••
+              - link "Next" [ref=e865] [cursor=pointer]:
+                - /url: /products/invoko?page=2#comments
+                - generic [ref=e866]:
+                  - generic [ref=e867]: Next
+                  - img [ref=e868]
+              - link "Last" [ref=e870] [cursor=pointer]:
+                - /url: /products/invoko?page=8#comments
+                - generic [ref=e871]:
+                  - generic [ref=e872]: Last
+                  - img [ref=e873]
+      - generic [ref=e875]:
+        - generic [ref=e877]: Reviews
+        - generic [ref=e879]:
+          - generic [ref=e880]: No reviews yet
+          - generic [ref=e881]: Be the first to leave a review for Invoko
+          - button "Leave a review" [ref=e882] [cursor=pointer]
+      - button "View all" [ref=e883] [cursor=pointer]
+    - complementary [ref=e884]:
+      - generic [ref=e885]:
+        - generic [ref=e887]: Launched 14d ago
+        - generic [ref=e888]:
+          - generic [ref=e889]:
+            - generic [ref=e890]:
+              - generic [ref=e891]: "#2"
+              - generic [ref=e892]: Day Rank
+            - generic [ref=e893]:
+              - button "Go to previous launch (or press ←)" [ref=e895] [cursor=pointer]:
+                - img [ref=e896]
+              - button "Go to next launch (or press →)" [ref=e900] [cursor=pointer]:
+                - img [ref=e901]
+          - button "Upvote • 511 points" [ref=e903] [cursor=pointer]:
+            - generic [ref=e904]:
+              - img [ref=e905]
+              - generic [ref=e907]: Upvote • 511 points
+      - generic [ref=e908]:
+        - button "Follow Invoko" [ref=e909] [cursor=pointer]:
+          - img [ref=e910]
+          - generic [ref=e912]: Follow Invoko
+        - button "Add to collection" [ref=e913] [cursor=pointer]:
+          - img [ref=e914]
+          - generic [ref=e916]: Add to collection
+        - button "Share" [ref=e917] [cursor=pointer]:
+          - img [ref=e918]
+          - generic [ref=e920]: Share
+      - generic [ref=e921]:
+        - generic [ref=e923]: Company Info
+        - link "invoko.ai" [ref=e924] [cursor=pointer]:
+          - /url: https://invoko.ai/?ref=producthunt
+          - img [ref=e925]
+          - generic [ref=e927]: invoko.ai
+      - generic [ref=e928]:
+        - generic [ref=e929]: Invoko Info
+        - generic [ref=e930]:
+          - img [ref=e931]
+          - text: Launched in 2026
+      - generic [ref=e935]:
+        - generic [ref=e936]: Forum
+        - link "p/invoko" [ref=e937] [cursor=pointer]:
+          - /url: /p/invoko
+          - img [ref=e938]
+          - generic [ref=e941]: p/invoko
+      - generic [ref=e942]:
+        - generic [ref=e943]: Awards
+        - generic [ref=e944]:
+          - 'button "Invoko was ranked #5 of the week for June 16th, 2026" [ref=e945] [cursor=pointer]':
+            - 'img "Invoko was ranked #5 of the week for June 16th, 2026" [ref=e946]'
+          - 'button "Invoko was ranked #2 of the day for June 16th, 2026" [ref=e947] [cursor=pointer]':
+            - 'img "Invoko was ranked #2 of the day for June 16th, 2026" [ref=e948]'
+        - link "View all" [ref=e949] [cursor=pointer]:
+          - /url: /products/invoko/awards
+          - generic [ref=e950]: View all
+          - img [ref=e951]
+      - generic [ref=e953]:
+        - generic [ref=e954]: Social
+        - link "Instagram" [ref=e955] [cursor=pointer]:
+          - /url: https://www.instagram.com/invoko_ai/
+          - img [ref=e956]
+          - text: Instagram
+        - link "X" [ref=e961] [cursor=pointer]:
+          - /url: https://twitter.com/invoko_ai
+          - img [ref=e962]
+          - text: X
+      - generic [ref=e965]:
+        - heading "Similar Products" [level=2] [ref=e966]
+        - generic [ref=e967]:
+          - generic [ref=e968]:
+            - img "Wispr Flow" [ref=e969]
+            - generic [ref=e970]:
+              - link "Wispr Flow" [ref=e972] [cursor=pointer]:
+                - /url: /products/wisprflow?ref=product_sidebar
+                - text: Wispr Flow
+              - generic [ref=e974]: Speak naturally, write perfectly & 4x faster in every app
+              - link "4.7 (72 reviews)" [ref=e975] [cursor=pointer]:
+                - /url: /products/wisprflow/reviews
+                - img [ref=e976]
+                - generic [ref=e978]: "4.7"
+                - generic [ref=e979]: (72 reviews)
+              - link "AI Dictation Apps" [ref=e981] [cursor=pointer]:
+                - /url: /categories/ai-dictation-apps
+          - generic [ref=e982]:
+            - img "TalkTastic" [ref=e983]
+            - generic [ref=e984]:
+              - link "TalkTastic" [ref=e986] [cursor=pointer]:
+                - /url: /products/talktastic?ref=product_sidebar
+                - text: TalkTastic
+              - generic [ref=e988]: Voice Keyboard that Understands Your Personal Context
+              - link "4.9 (26 reviews)" [ref=e989] [cursor=pointer]:
+                - /url: /products/talktastic/reviews
+                - img [ref=e990]
+                - generic [ref=e992]: "4.9"
+                - generic [ref=e993]: (26 reviews)
+              - generic [ref=e994]:
+                - link "Text-to-Speech Software" [ref=e995] [cursor=pointer]:
+                  - /url: /categories/text-to-speech-software
+                - link "AI Dictation Apps" [ref=e996] [cursor=pointer]:
+                  - /url: /categories/ai-dictation-apps
+          - generic [ref=e997]:
+            - img "Claude for Desktop" [ref=e998]
+            - generic [ref=e999]:
+              - link "Claude for Desktop" [ref=e1001] [cursor=pointer]:
+                - /url: /products/claude-for-desktop?ref=product_sidebar
+                - text: Claude for Desktop
+              - generic [ref=e1003]: Desktop AI partner. Fast, focused, & designed for deep work
+              - link "4.8 (12 reviews)" [ref=e1004] [cursor=pointer]:
+                - /url: /products/claude-for-desktop/reviews
+                - img [ref=e1005]
+                - generic [ref=e1007]: "4.8"
+                - generic [ref=e1008]: (12 reviews)
+              - link "AI Chatbots" [ref=e1010] [cursor=pointer]:
+                - /url: /categories/ai-chatbots
+          - generic [ref=e1011]:
+            - img "Alfred" [ref=e1012]
+            - generic [ref=e1013]:
+              - link "Alfred" [ref=e1015] [cursor=pointer]:
+                - /url: /products/alfred?ref=product_sidebar
+                - text: Alfred
+              - generic [ref=e1017]: Productivity App for macOS
+              - link "5.0 (18 reviews)" [ref=e1018] [cursor=pointer]:
+                - /url: /products/alfred/reviews
+                - img [ref=e1019]
+                - generic [ref=e1021]: "5.0"
+                - generic [ref=e1022]: (18 reviews)
+              - generic [ref=e1023]:
+                - link "Productivity" [ref=e1024] [cursor=pointer]:
+                  - /url: /categories/productivity
+                - link "Automation tools" [ref=e1025] [cursor=pointer]:
+                  - /url: /categories/automation
+          - generic [ref=e1026]:
+            - img "Shadow" [ref=e1027]
+            - generic [ref=e1028]:
+              - link "Shadow" [ref=e1030] [cursor=pointer]:
+                - /url: /products/shadow-4?ref=product_sidebar
+                - text: Shadow
+              - generic [ref=e1032]: The interface AI needs. One that sees, hears, and runs.
+              - link "4.9 (23 reviews)" [ref=e1033] [cursor=pointer]:
+                - /url: /products/shadow-4/reviews
+                - img [ref=e1034]
+                - generic [ref=e1036]: "4.9"
+                - generic [ref=e1037]: (23 reviews)
+              - generic [ref=e1038]:
+                - link "Meeting software" [ref=e1039] [cursor=pointer]:
+                  - /url: /categories/meetings
+                - link "AI notetakers" [ref=e1040] [cursor=pointer]:
+                  - /url: /categories/ai-meeting-notetakers
+        - link "View more" [ref=e1041] [cursor=pointer]:
+          - /url: /products/invoko/alternatives
+          - generic [ref=e1042]: View more
+          - img [ref=e1043]
+  - contentinfo [ref=e1045]:
+    - generic [ref=e1046]:
+      - generic [ref=e1047]: Top Product Categories
+      - generic [ref=e1048]:
+        - generic [ref=e1049]:
+          - heading "Engineering & Development" [level=3] [ref=e1050]:
+            - link "Engineering & Development" [ref=e1051] [cursor=pointer]:
+              - /url: /categories/engineering-development?ref=footer
+          - list [ref=e1052]:
+            - listitem [ref=e1053]:
+              - link "Vibe Coding Tools" [ref=e1054] [cursor=pointer]:
+                - /url: /categories/vibe-coding?ref=footer
+            - listitem [ref=e1055]:
+              - link "AI Coding Agents" [ref=e1056] [cursor=pointer]:
+                - /url: /categories/ai-coding-agents?ref=footer
+            - listitem [ref=e1057]:
+              - link "AI Code Editors" [ref=e1058] [cursor=pointer]:
+                - /url: /categories/ai-code-editors?ref=footer
+        - generic [ref=e1059]:
+          - heading "LLMs" [level=3] [ref=e1060]:
+            - link "LLMs" [ref=e1061] [cursor=pointer]:
+              - /url: /categories/llms?ref=footer
+          - list [ref=e1062]:
+            - listitem [ref=e1063]:
+              - link "AI Chatbots" [ref=e1064] [cursor=pointer]:
+                - /url: /categories/ai-chatbots?ref=footer
+            - listitem [ref=e1065]:
+              - link "AI Infrastructure Tools" [ref=e1066] [cursor=pointer]:
+                - /url: /categories/ai-infrastructure?ref=footer
+            - listitem [ref=e1067]:
+              - link "Prompt Engineering Tools" [ref=e1068] [cursor=pointer]:
+                - /url: /categories/prompt-engineering-tools?ref=footer
+        - generic [ref=e1069]:
+          - heading "Productivity" [level=3] [ref=e1070]:
+            - link "Productivity" [ref=e1071] [cursor=pointer]:
+              - /url: /categories/productivity?ref=footer
+          - list [ref=e1072]:
+            - listitem [ref=e1073]:
+              - link "AI notetakers" [ref=e1074] [cursor=pointer]:
+                - /url: /categories/ai-meeting-notetakers?ref=footer
+            - listitem [ref=e1075]:
+              - link "Note and writing apps" [ref=e1076] [cursor=pointer]:
+                - /url: /categories/notes-documents?ref=footer
+            - listitem [ref=e1077]:
+              - link "Team collaboration software" [ref=e1078] [cursor=pointer]:
+                - /url: /categories/team-collaboration?ref=footer
+            - listitem [ref=e1079]:
+              - link "Search" [ref=e1080] [cursor=pointer]:
+                - /url: /categories/search?ref=footer
+            - listitem [ref=e1081]:
+              - link "AI Workflow Automation" [ref=e1082] [cursor=pointer]:
+                - /url: /categories/ai-workflow-automation?ref=footer
+        - generic [ref=e1083]:
+          - heading "Marketing & Sales" [level=3] [ref=e1084]:
+            - link "Marketing & Sales" [ref=e1085] [cursor=pointer]:
+              - /url: /categories/marketing-sales?ref=footer
+          - list [ref=e1086]:
+            - listitem [ref=e1087]:
+              - link "Lead generation software" [ref=e1088] [cursor=pointer]:
+                - /url: /categories/lead-generation?ref=footer
+            - listitem [ref=e1089]:
+              - link "Marketing automation platforms" [ref=e1090] [cursor=pointer]:
+                - /url: /categories/marketing-automation?ref=footer
+        - generic [ref=e1091]:
+          - heading "Design & Creative" [level=3] [ref=e1092]:
+            - link "Design & Creative" [ref=e1093] [cursor=pointer]:
+              - /url: /categories/design-creative?ref=footer
+          - list [ref=e1094]:
+            - listitem [ref=e1095]:
+              - link "Video editing" [ref=e1096] [cursor=pointer]:
+                - /url: /categories/video-editing?ref=footer
+            - listitem [ref=e1097]:
+              - link "Design resources" [ref=e1098] [cursor=pointer]:
+                - /url: /categories/design-resources?ref=footer
+            - listitem [ref=e1099]:
+              - link "Graphic design tools" [ref=e1100] [cursor=pointer]:
+                - /url: /categories/graphic-design-tools?ref=footer
+            - listitem [ref=e1101]:
+              - link "AI Generative Media" [ref=e1102] [cursor=pointer]:
+                - /url: /categories/ai-generative-media?ref=footer
+        - generic [ref=e1103]:
+          - heading "Social & Community" [level=3] [ref=e1104]:
+            - link "Social & Community" [ref=e1105] [cursor=pointer]:
+              - /url: /categories/social-community?ref=footer
+          - list [ref=e1106]:
+            - listitem [ref=e1107]:
+              - link "Social Networking" [ref=e1108] [cursor=pointer]:
+                - /url: /categories/social-networking?ref=footer
+            - listitem [ref=e1109]:
+              - link "Professional networking platforms" [ref=e1110] [cursor=pointer]:
+                - /url: /categories/professional-networking?ref=footer
+            - listitem [ref=e1111]:
+              - link "Community management" [ref=e1112] [cursor=pointer]:
+                - /url: /categories/community-management?ref=footer
+        - generic [ref=e1113]:
+          - heading "Finance" [level=3] [ref=e1114]:
+            - link "Finance" [ref=e1115] [cursor=pointer]:
+              - /url: /categories/finance?ref=footer
+          - list [ref=e1116]:
+            - listitem [ref=e1117]:
+              - link "Accounting software" [ref=e1118] [cursor=pointer]:
+                - /url: /categories/accounting?ref=footer
+            - listitem [ref=e1119]:
+              - link "Fundraising resources" [ref=e1120] [cursor=pointer]:
+                - /url: /categories/fundraising-resources?ref=footer
+            - listitem [ref=e1121]:
+              - link "Investing" [ref=e1122] [cursor=pointer]:
+                - /url: /categories/investing?ref=footer
+        - generic [ref=e1123]:
+          - heading "AI Agents" [level=3] [ref=e1124]:
+            - link "AI Agents" [ref=e1125] [cursor=pointer]:
+              - /url: /categories/ai-agents?ref=footer
+          - list [ref=e1126]:
+            - listitem [ref=e1127]:
+              - link "AI Voice Agents" [ref=e1128] [cursor=pointer]:
+                - /url: /categories/ai-voice-agents?ref=footer
+          - link "See All Categories >>" [ref=e1129] [cursor=pointer]:
+            - /url: /categories?ref=footer
+    - generic [ref=e1132]:
+      - generic [ref=e1133]:
+        - heading "Trending categories" [level=3] [ref=e1134]
+        - list [ref=e1135]:
+          - listitem [ref=e1136]:
+            - link "Vibe Coding Tools" [ref=e1137] [cursor=pointer]:
+              - /url: /categories/vibe-coding?ref=footer
+          - listitem [ref=e1138]:
+            - link "AI Dictation Apps" [ref=e1139] [cursor=pointer]:
+              - /url: /categories/ai-dictation-apps?ref=footer
+          - listitem [ref=e1140]:
+            - link "AI notetakers" [ref=e1141] [cursor=pointer]:
+              - /url: /categories/ai-meeting-notetakers?ref=footer
+          - listitem [ref=e1142]:
+            - link "Code Review Tools" [ref=e1143] [cursor=pointer]:
+              - /url: /categories/code-review-tools?ref=footer
+          - listitem [ref=e1144]:
+            - link "No-code Platforms" [ref=e1145] [cursor=pointer]:
+              - /url: /categories/no-code-platforms?ref=footer
+          - listitem [ref=e1146]:
+            - link "Figma Plugins" [ref=e1147] [cursor=pointer]:
+              - /url: /categories/figma-plugins?ref=footer
+          - listitem [ref=e1148]:
+            - link "Static site generators" [ref=e1149] [cursor=pointer]:
+              - /url: /categories/static-site-generators?ref=footer
+      - generic [ref=e1150]:
+        - heading "Top reviewed" [level=3] [ref=e1151]
+        - list [ref=e1152]:
+          - listitem [ref=e1153]:
+            - link "Lovable" [ref=e1154] [cursor=pointer]:
+              - /url: /products/lovable/reviews?ref=footer
+          - listitem [ref=e1155]:
+            - link "n8n" [ref=e1156] [cursor=pointer]:
+              - /url: /products/n8n-io/reviews?ref=footer
+          - listitem [ref=e1157]:
+            - link "Attio" [ref=e1158] [cursor=pointer]:
+              - /url: /products/attio/reviews?ref=footer
+          - listitem [ref=e1159]:
+            - link "PostHog" [ref=e1160] [cursor=pointer]:
+              - /url: /products/posthog/reviews?ref=footer
+          - listitem [ref=e1161]:
+            - link "Vapi" [ref=e1162] [cursor=pointer]:
+              - /url: /products/vapi/reviews?ref=footer
+          - listitem [ref=e1163]:
+            - link "Granola" [ref=e1164] [cursor=pointer]:
+              - /url: /products/granola/reviews?ref=footer
+          - listitem [ref=e1165]:
+            - link "Raycast" [ref=e1166] [cursor=pointer]:
+              - /url: /products/raycast/reviews?ref=footer
+          - listitem [ref=e1167]:
+            - link "Supabase" [ref=e1168] [cursor=pointer]:
+              - /url: /products/supabase/reviews?ref=footer
+      - generic [ref=e1169]:
+        - heading "Trending products" [level=3] [ref=e1170]
+        - list [ref=e1171]:
+          - listitem [ref=e1172]:
+            - link "Lovable" [ref=e1173] [cursor=pointer]:
+              - /url: /products/lovable?ref=footer
+          - listitem [ref=e1174]:
+            - link "Screen Studio" [ref=e1175] [cursor=pointer]:
+              - /url: /products/screen-studio?ref=footer
+          - listitem [ref=e1176]:
+            - link "bolt.new" [ref=e1177] [cursor=pointer]:
+              - /url: /products/bolt-new?ref=footer
+          - listitem [ref=e1178]:
+            - link "Wispr Flow" [ref=e1179] [cursor=pointer]:
+              - /url: /products/wisprflow?ref=footer
+          - listitem [ref=e1180]:
+            - link "Framer" [ref=e1181] [cursor=pointer]:
+              - /url: /products/framer?ref=footer
+          - listitem [ref=e1182]:
+            - link "Replit" [ref=e1183] [cursor=pointer]:
+              - /url: /products/replit?ref=footer
+          - listitem [ref=e1184]:
+            - link "Vapi" [ref=e1185] [cursor=pointer]:
+              - /url: /products/vapi?ref=footer
+          - listitem [ref=e1186]:
+            - link "Granola" [ref=e1187] [cursor=pointer]:
+              - /url: /products/granola?ref=footer
+      - generic [ref=e1188]:
+        - heading "Top forum threads" [level=3] [ref=e1189]
+        - list [ref=e1190]:
+          - listitem [ref=e1191]:
+            - link "Cursor or Claude Code?" [ref=e1192] [cursor=pointer]:
+              - /url: /p/cursor/cursor-or-claude-code?ref=footer
+          - listitem [ref=e1193]:
+            - 'link "POLL: Domain or product first?" [ref=e1194] [cursor=pointer]':
+              - /url: /p/producthunt/poll-do-you-buy-the-domain-first-or-build-the-product-first?ref=footer
+          - listitem [ref=e1195]:
+            - link "YC deadline in <2 weeks; Who's applying?" [ref=e1196] [cursor=pointer]:
+              - /url: /p/yc/yc-deadline-in-2-weeks-who-s-applying?ref=footer
+          - listitem [ref=e1197]:
+            - link "We Got into YC, Got Kicked Out, and Fought Our Way Back" [ref=e1198] [cursor=pointer]:
+              - /url: /p/okibi/we-got-into-yc-got-kicked-out-and-fought-our-way-back?ref=footer
+          - listitem [ref=e1199]:
+            - link "How Wispr Flow found PMF through pivot" [ref=e1200] [cursor=pointer]:
+              - /url: /p/wisprflow/how-wispr-flow-found-pmf-through-a-pivot?ref=footer
+          - listitem [ref=e1201]:
+            - link "Best Vibe Coding tool so far?" [ref=e1202] [cursor=pointer]:
+              - /url: /p/vibecoding/what-is-the-best-vibe-coding-tool-so-far-bonus-points-if-we-ve-never-heard-of-it?ref=footer
+          - listitem [ref=e1203]:
+            - link "Landing page roast - 48 hours only" [ref=e1204] [cursor=pointer]:
+              - /url: /p/producthunt/landing-page-roast-48-hours-only?ref=footer
+          - listitem [ref=e1205]:
+            - link "Fix your tagline with the PH CEO" [ref=e1206] [cursor=pointer]:
+              - /url: /p/general/i-m-the-product-hunt-ceo-tell-me-your-tagline-and-i-ll-fix-it-for-you?ref=footer
+    - generic [ref=e1209]:
+      - generic [ref=e1210]: © 2026 Product Hunt
+      - generic [ref=e1211]:
+        - link "Newsletter" [ref=e1212] [cursor=pointer]:
+          - /url: /newsletters
+        - link "Apps" [ref=e1213] [cursor=pointer]:
+          - /url: /apps
+        - link "About" [ref=e1214] [cursor=pointer]:
+          - /url: /about
+        - link "FAQ" [ref=e1215] [cursor=pointer]:
+          - /url: https://help.producthunt.com
+        - link "Terms" [ref=e1216] [cursor=pointer]:
+          - /url: /legal#terms
+        - link "Privacy & Cookies" [ref=e1217] [cursor=pointer]:
+          - /url: /legal#privacy
+        - link "Privacy Choices" [ref=e1218] [cursor=pointer]:
+          - /url: /privacy/do-not-sell
+        - link "Advertise" [ref=e1219] [cursor=pointer]:
+          - /url: /sponsor?utm_content=sf
+        - link "llms.txt" [ref=e1220] [cursor=pointer]:
+          - /url: /llms.txt
+        - generic [ref=e1221]:
+          - text: "Contact us:"
+          - link "hello@producthunt.com" [ref=e1222] [cursor=pointer]:
+            - /url: mailto:hello@producthunt.com
+      - generic [ref=e1223]:
+        - link [ref=e1224] [cursor=pointer]:
+          - /url: https://x.com/ProductHunt
+          - img [ref=e1225]
+        - link [ref=e1227] [cursor=pointer]:
+          - /url: https://www.linkedin.com/company/producthunt
+          - img [ref=e1228]

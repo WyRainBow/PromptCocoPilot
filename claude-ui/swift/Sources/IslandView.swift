@@ -22,46 +22,165 @@ struct IslandRoot: View {
     @EnvironmentObject var state: AppState
 
     var body: some View {
-        VStack(spacing: 0) {
-            headerBar
-            if state.expanded { expandedBody }
-        }
-        .frame(width: 380)       // fixed width → content drives the height
-        .fixedSize(horizontal: false, vertical: true)
-        .background(background)
-        .clipShape(islandShape)
-        .ignoresSafeArea(.all)   // draw under the notch, not below it
-        .background(GeometryReader { proxy in
-            Color.clear.preference(key: HeightKey.self, value: proxy.size.height)
-        })
-        .onPreferenceChange(HeightKey.self) { state.reportHeight($0) }
+        content
+            .frame(width: frameWidth)
+            .fixedSize(horizontal: false, vertical: true)
+            .background(cardBackground)
+            .clipShape(clipShape)
+            .ignoresSafeArea(.all)
+            .background(GeometryReader { proxy in
+                Color.clear.preference(key: HeightKey.self, value: proxy.size.height)
+            })
+            .onPreferenceChange(HeightKey.self) { state.reportHeight($0) }
+            // Absorb feel: content scales toward the notch + fades as it docks,
+            // coordinated with the window's bouncy frame animation.
+            .animation(.spring(response: 0.34, dampingFraction: 0.74), value: state.presence)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: state.dockPreview)
+            .animation(.spring(response: 0.3, dampingFraction: 0.78), value: state.notchHovered)
     }
 
-    /// Square top (flush with the notch / screen edge), rounded bottom, squircle.
+    @ViewBuilder
+    private var content: some View {
+        if state.dockPreview {
+            dockingPreview.transition(absorbTransition)
+        } else {
+            switch state.presence {
+            case .floating: cloudFloating.transition(absorbTransition)
+            case .docked:   residentDocked.transition(absorbTransition)
+            case .expanded: VStack(spacing: 0) { cardHeader; expandedBody }.transition(.opacity)
+            }
+        }
+    }
+
+    /// Shrink-toward-the-notch + fade — the "sucked into the notch" transition.
+    private var absorbTransition: AnyTransition {
+        .scale(scale: 0.35, anchor: .top).combined(with: .opacity)
+    }
+
+    private var frameWidth: CGFloat {
+        if state.dockPreview { return 320 }
+        switch state.presence {
+        case .floating: return 140
+        case .docked:   return state.notchHovered ? 330 : 290
+        case .expanded: return 380
+        }
+    }
+
+    // MARK: fold-cue preview — cloud snapped to the notch with a soft blue glow
+
+    private var dockingPreview: some View {
+        let nh = max(24, state.notch.height)
+        return ZStack(alignment: .top) {
+            // Wide soft halo …
+            RadialGradient(
+                gradient: Gradient(colors: [
+                    Color(red: 0.55, green: 0.78, blue: 1.0).opacity(0.5),
+                    Color(red: 0.55, green: 0.78, blue: 1.0).opacity(0.0),
+                ]),
+                center: .center, startRadius: 0, endRadius: 120)
+                .frame(width: 290, height: 165)
+                .blur(radius: 20)
+                .offset(y: nh)
+
+            // … plus a brighter white-blue core for a luminous "absorb" feel.
+            RadialGradient(
+                gradient: Gradient(colors: [
+                    Color(red: 0.82, green: 0.91, blue: 1.0).opacity(0.75),
+                    Color(red: 0.82, green: 0.91, blue: 1.0).opacity(0.0),
+                ]),
+                center: .center, startRadius: 0, endRadius: 56)
+                .frame(width: 150, height: 100)
+                .blur(radius: 9)
+                .offset(y: nh + 6)
+
+            // Cloud sitting in the notch band, centered.
+            RiveCloudView()
+                .frame(width: 46, height: 32)
+                .frame(maxWidth: .infinity)
+                .frame(height: nh)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: nh + 78)
+    }
+
+    // MARK: floating cloud (free on the desktop) — double-click to expand
+
+    private var cloudFloating: some View {
+        RiveCloudView()
+            .padding(.horizontal, 4)
+            .padding(.vertical, 5)
+            .frame(width: 140, height: 96)
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2) { state.toggleExpand() }
+    }
+
+    // MARK: resident cloud (docked in the notch) — drag down to pull out
+
+    private var residentDocked: some View {
+        let nh = max(24, state.notch.height)
+        let hovered = state.notchHovered
+        // Wide thin bar: cloud flanks the camera on the left, dot on the right.
+        return HStack(spacing: 0) {
+            RiveCloudView()
+                .frame(width: hovered ? 46 : 38, height: hovered ? 30 : 25)
+                .padding(.leading, 14)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Color.clear.frame(width: state.notch.width)   // clear the camera
+
+            Circle()
+                .fill(Theme.accent.opacity(0.85))
+                .frame(width: 6, height: 6)
+                .shadow(color: Theme.accent.opacity(0.7), radius: 3)
+                .padding(.trailing, 16)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+        .frame(height: nh + (hovered ? 12 : 6))
+        .contentShape(Rectangle())
+        .onHover { state.setNotchHover($0) }       // hover → expand the box
+        .onTapGesture(count: 2) { state.toggleExpand() }
+    }
+
+    // MARK: shape + background per presence
+    // Floating cloud = no card chrome (transparent, cloud floats). Docked /
+    // docked-expanded = square top to merge with the notch. Floating-expanded =
+    // a rounded floating card with a shadow.
+
+    private var floatingCard: Bool { state.isExpanded && !state.expandedFromDock }
+
     private var islandShape: UnevenRoundedRectangle {
-        let r: CGFloat = state.expanded ? 18 : 11
+        let topRounded = floatingCard
+        let r: CGFloat = state.isExpanded ? 18 : 14
         return UnevenRoundedRectangle(
-            topLeadingRadius: 0, bottomLeadingRadius: r,
-            bottomTrailingRadius: r, topTrailingRadius: 0,
+            topLeadingRadius: topRounded ? r : 0, bottomLeadingRadius: r,
+            bottomTrailingRadius: r, topTrailingRadius: topRounded ? r : 0,
             style: .continuous)
     }
 
-    /// Pure black at the very top so it disappears into the notch, easing into a
-    /// dark navy below — keeps the "blue系" feel without breaking the merge.
-    private var background: some View {
-        islandShape.fill(
-            LinearGradient(colors: [.black, .black, Theme.bodyTint],
-                           startPoint: .top, endPoint: .bottom)
-        )
+    private var clipShape: AnyShape {
+        state.isFloating ? AnyShape(Rectangle()) : AnyShape(islandShape)
     }
 
-    // MARK: header — lives in the menu-bar band, flanking the camera
+    @ViewBuilder
+    private var cardBackground: some View {
+        if state.isFloating {
+            Color.clear
+        } else {
+            islandShape
+                .fill(LinearGradient(colors: [.black, .black, Theme.bodyTint],
+                                     startPoint: .top, endPoint: .bottom))
+                .shadow(color: floatingCard ? .black.opacity(0.5) : .clear,
+                        radius: floatingCard ? 22 : 0, y: floatingCard ? 8 : 0)
+        }
+    }
 
-    private var headerBar: some View {
+    // MARK: card header (top of the expanded card)
+
+    private var cardHeader: some View {
         HStack(spacing: 0) {
-            HStack(spacing: 6) {
-                Text("✨").font(.system(size: 13))
-                Text(state.expanded ? state.sessionLabel : "优化输入")
+            HStack(spacing: 7) {
+                RiveCloudView().frame(width: 38, height: 26)
+                Text(state.sessionLabel)
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(Theme.text)
                     .lineLimit(1)
@@ -69,27 +188,22 @@ struct IslandRoot: View {
             .padding(.leading, 14)
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Transparent gap exactly the width of the physical notch / camera.
-            Color.clear.frame(width: state.notch.width)
+            // Reserve the camera only when the card grows from the notch.
+            if state.expandedFromDock {
+                Color.clear.frame(width: state.notch.width)
+            }
 
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(Theme.accent)
-                    .frame(width: 6, height: 6)
-                    .shadow(color: Theme.accent, radius: 3)
-                Image(systemName: state.expanded ? "chevron.up" : "chevron.down")
-                    .font(.system(size: 9, weight: .bold))
+            Button { state.collapse() } label: {
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 10, weight: .bold))
                     .foregroundColor(Theme.muted)
             }
+            .buttonStyle(.plain)
             .padding(.trailing, 14)
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .frame(height: max(28, state.notch.height))
+        .frame(height: state.expandedFromDock ? max(28, state.notch.height) : 32)
         .contentShape(Rectangle())
-        // Double-click toggles. Dragging is handled by a controller-level NSEvent
-        // monitor (absolute mouse position) — a SwiftUI DragGesture jitters here
-        // because its translation is relative to the window that's being moved.
-        .onTapGesture(count: 2) { state.toggle() }
     }
 
     // MARK: expanded card body (below the notch)
@@ -392,6 +506,18 @@ struct IslandRoot: View {
                 .padding(.vertical, 5)
         }
         .background(fieldBg)
+        .overlay(alignment: .topTrailing) {
+            if !text.wrappedValue.isEmpty {
+                Button { text.wrappedValue = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(Theme.muted.opacity(0.65))
+                }
+                .buttonStyle(.plain)
+                .help("清空")
+                .padding(6)
+            }
+        }
     }
 }
 

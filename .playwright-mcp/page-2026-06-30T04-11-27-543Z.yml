@@ -1,0 +1,360 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e5]:
+        - link "Invoko logo Invoko" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - img "Invoko logo" [ref=e7]
+          - generic [ref=e8]: Invoko
+        - generic [ref=e9]:
+          - link "How it works" [ref=e10] [cursor=pointer]:
+            - /url: /#ask-without-chat
+          - link "Pricing" [ref=e11] [cursor=pointer]:
+            - /url: /#pricing
+          - link "Privacy" [ref=e12] [cursor=pointer]:
+            - /url: /privacy
+          - button "Download for Mac" [ref=e13] [cursor=pointer]
+    - main [ref=e14]:
+      - generic [ref=e15]:
+        - generic:
+          - generic: Scroll to see Invoko in context
+          - img
+        - generic [ref=e18]:
+          - link "Invoko on Product Hunt" [ref=e21] [cursor=pointer]:
+            - /url: https://www.producthunt.com/products/invoko?embed=true&utm_source=badge-top-post-badge&utm_medium=badge&utm_campaign=badge-invoko
+            - generic [ref=e22]:
+              - generic [ref=e23]: P
+              - generic [ref=e24]:
+                - generic [ref=e25]: Top post on
+                - generic [ref=e26]: Product Hunt
+            - img "Invoko - A little hand on your Mac | Product Hunt" [ref=e27]
+          - heading "Say it. Invoko gets it done." [level=1] [ref=e28]:
+            - generic [ref=e29]:
+              - generic [ref=e30]: Say it.
+              - generic [ref=e31]:
+                - text: Invok
+                - generic [ref=e32]:
+                  - generic:
+                    - generic:
+                      - img
+                    - generic:
+                      - img
+                    - generic:
+                      - img
+              - generic [ref=e35]: gets it done
+          - generic [ref=e36]:
+            - paragraph [ref=e37]: Invoko is an AI desktop assistant you can talk to. Speak from the notch or drag it to your desktop to draft, summarize, write back, or take approved actions.
+            - generic [ref=e38]:
+              - generic [ref=e39]:
+                - button "Download for Mac" [ref=e40] [cursor=pointer]
+                - generic [ref=e41]: macOS 14+
+              - button "Join waitlist for Windows" [ref=e42] [cursor=pointer]
+      - generic [ref=e44]:
+        - heading "An AI helper beside you." [level=2] [ref=e47]:
+          - generic [ref=e48]: An AI helper
+          - generic [ref=e49]: beside you.
+        - paragraph [ref=e50]: Invoko starts with the app, page, selection, and field in front of you.
+        - generic "Invoko works across connected apps" [ref=e52]
+        - generic [ref=e53]:
+          - strong [ref=e54]: ask
+          - generic [ref=e55]:
+            - emphasis [ref=e56]: from the app
+            - emphasis [ref=e57]: already open
+        - generic [ref=e58]:
+          - strong [ref=e59]: quick reply
+          - generic [ref=e60]:
+            - emphasis [ref=e61]: answer the thread
+            - emphasis [ref=e62]: without switching tabs
+        - generic [ref=e63]:
+          - strong [ref=e64]: 4x faster
+          - generic [ref=e65]:
+            - emphasis [ref=e66]: than typing
+            - emphasis [ref=e67]: when you speak
+        - generic [ref=e68]:
+          - strong [ref=e69]: walk through
+          - generic [ref=e70]:
+            - emphasis [ref=e71]: get the next step
+            - emphasis [ref=e72]: in unfamiliar software
+        - generic [ref=e73]:
+          - strong [ref=e74]: explain
+          - generic [ref=e75]:
+            - emphasis [ref=e76]: ask about the page
+            - emphasis [ref=e77]: you are already reading
+        - generic [ref=e78]:
+          - strong [ref=e79]: handoff
+          - generic [ref=e80]:
+            - emphasis [ref=e81]: longer work can
+            - emphasis [ref=e82]: keep moving
+        - generic [ref=e83]:
+          - strong [ref=e84]: personal helper
+          - generic [ref=e85]:
+            - emphasis [ref=e86]: keeps your context
+            - emphasis [ref=e87]: across sessions
+      - generic [ref=e90]:
+        - generic [ref=e95]:
+          - heading "Ask without opening a chat." [level=2] [ref=e96]
+          - generic [ref=e98]:
+            - img [ref=e100]
+            - generic [ref=e103]:
+              - strong [ref=e104]: Microphone
+              - generic [ref=e105]: Allowed for Invoko
+        - generic [ref=e108]:
+          - heading "Hold Fn to say what you need done." [level=3] [ref=e109]:
+            - text: Hold
+            - generic [ref=e110]: Fn
+            - text: to say what you need done.
+          - paragraph [ref=e111]: Invoko uses the microphone for that moment, then turns what you said into a reply, rewrite, or quick answer.
+      - generic [ref=e115]:
+        - generic [ref=e116]:
+          - generic [ref=e121]:
+            - heading "Act from the context already on screen." [level=2] [ref=e122]
+            - generic [ref=e124]:
+              - img [ref=e126]
+              - generic [ref=e128]:
+                - strong [ref=e129]: Screen Access
+                - generic [ref=e130]: Allowed for Invoko
+          - generic [ref=e137]:
+            - heading "Invoko uses the open page so you do not have to describe it." [level=3] [ref=e138]
+            - paragraph [ref=e139]: When you ask, Invoko can use the current work to suggest actions that make sense there.
+        - generic [ref=e140]:
+          - generic [ref=e145]:
+            - heading "Let the task keep moving across apps." [level=2] [ref=e146]
+            - generic [ref=e148]:
+              - img [ref=e150]
+              - generic [ref=e155]:
+                - strong [ref=e156]: Accessibility
+                - generic [ref=e157]: Allowed for Invoko
+          - generic [ref=e161]:
+            - heading "Tell Invoko what to do, and it can keep working after you approve." [level=3] [ref=e162]
+            - paragraph [ref=e163]: It can move between apps, gather what it needs, and bring the result back.
+      - generic [ref=e168]:
+        - img [ref=e171]
+        - generic [ref=e173]:
+          - heading "Privacy in Invoko you're in control" [level=2] [ref=e174]:
+            - text: Privacy in Invoko
+            - text: you're in control
+          - paragraph [ref=e175]: Invoko puts privacy and permissions first. Your voice is never stored on our servers, and most data never leaves your Mac.
+        - generic [ref=e176]:
+          - generic [ref=e186]:
+            - generic [ref=e187]: Privacy & Diagnostics
+            - generic [ref=e188]:
+              - generic [ref=e189]:
+                - generic [ref=e190]:
+                  - generic [ref=e191]: Help Improve Invoko
+                  - generic [ref=e192]: Share anonymous diagnostics when something goes wrong.
+                - switch [ref=e193] [cursor=pointer]
+              - generic [ref=e195]:
+                - generic [ref=e196]:
+                  - generic [ref=e197]: Send Feedback
+                  - generic [ref=e198]: Found something frustrating or delightful? Let us know.
+                - link "Report" [ref=e199] [cursor=pointer]:
+                  - /url: mailto:hey@invoko.ai
+              - generic [ref=e200]:
+                - generic [ref=e201]:
+                  - generic [ref=e202]: Privacy Policy
+                  - generic [ref=e203]: Learn how your data is handled and protected.
+                - link "View Policy" [ref=e204] [cursor=pointer]:
+                  - /url: /privacy
+          - link "Check how Invoko handles your data" [ref=e206] [cursor=pointer]:
+            - /url: /privacy
+            - text: Check how Invoko handles your data
+            - img [ref=e207]
+      - generic [ref=e209]:
+        - generic [ref=e211]:
+          - generic [ref=e212]: "\"It replaced three apps I used for task management.\""
+          - generic [ref=e213]: "\"Hold Fn. Done. It really is that simple.\""
+          - generic [ref=e214]: "\"The memory feature is unlike anything I've seen on Mac.\""
+          - generic [ref=e215]: "\"I sent my first follow-up without opening Gmail.\""
+          - generic [ref=e216]: "\"It works while I'm in Figma. I never leave my flow.\""
+          - generic [ref=e217]: "\"The first AI tool that actually disappears into my work.\""
+          - generic [ref=e218]: "\"Drafted a whole client update just by talking to my screen.\""
+          - generic [ref=e219]: "\"It saved me probably 45 minutes on Monday.\""
+          - generic [ref=e220]: "\"It replaced three apps I used for task management.\""
+          - generic [ref=e221]: "\"Hold Fn. Done. It really is that simple.\""
+          - generic [ref=e222]: "\"The memory feature is unlike anything I've seen on Mac.\""
+          - generic [ref=e223]: "\"I sent my first follow-up without opening Gmail.\""
+          - generic [ref=e224]: "\"It works while I'm in Figma. I never leave my flow.\""
+          - generic [ref=e225]: "\"The first AI tool that actually disappears into my work.\""
+          - generic [ref=e226]: "\"Drafted a whole client update just by talking to my screen.\""
+          - generic [ref=e227]: "\"It saved me probably 45 minutes on Monday.\""
+        - generic [ref=e228]:
+          - generic [ref=e229]:
+            - heading "What beta users are saying." [level=2] [ref=e231]:
+              - text: What beta users
+              - text: are saying.
+            - paragraph [ref=e232]:
+              - text: From the first wave of
+              - text: Invoko beta users.
+          - generic [ref=e233]:
+            - generic [ref=e234]:
+              - generic [ref=e235]: "\""
+              - paragraph [ref=e236]: I dictated an entire client update, Invoko read my Figma file, pulled the key changes, and sent the email all while I kept designing. That was a first.
+              - generic [ref=e237]:
+                - generic [ref=e238]: S
+                - generic [ref=e239]:
+                  - generic [ref=e240]: Sophie K.
+                  - generic [ref=e241]: Product Designer · Uses Companion + Dispatch daily
+            - generic [ref=e242]:
+              - generic [ref=e243]: "\""
+              - paragraph [ref=e244]: The memory feature is what hooked me. I mentioned a deal in passing and three days later Invoko referenced it unprompted. It actually pays attention.
+              - generic [ref=e245]:
+                - generic [ref=e246]: M
+                - generic [ref=e247]:
+                  - generic [ref=e248]: Marcus R.
+                  - generic [ref=e249]: Account Executive · Primarily uses voice dispatch
+            - generic [ref=e250]:
+              - generic [ref=e251]: "\""
+              - paragraph [ref=e252]: I was skeptical about voice on desktop. But holding Fn and saying "remind me about this in 2 hours" while I'm mid-flow is just... magic.
+              - generic [ref=e253]:
+                - generic [ref=e254]: "Y"
+                - generic [ref=e255]:
+                  - generic [ref=e256]: Yuri T.
+                  - generic [ref=e257]: Software Engineer · Early beta user, M2 Pro
+      - generic [ref=e259]:
+        - heading "Beta access" [level=2] [ref=e261]
+        - generic [ref=e264]:
+          - img
+          - img
+          - generic [ref=e265]:
+            - generic [ref=e266]: Invoko for Mac
+            - paragraph [ref=e267]: Use the Mac action layer while we build it with early users.
+            - button "Try Invoko" [ref=e268] [cursor=pointer]
+            - paragraph [ref=e269]: Apple Silicon Mac. Early access while the beta is open. Feedback shapes what ships next.
+      - generic [ref=e271]:
+        - heading "Ask & Answered" [level=2] [ref=e273]:
+          - text: Ask &
+          - text: Answered
+        - generic [ref=e274]:
+          - generic [ref=e276]:
+            - button "Is Invoko always listening or watching my screen? +" [expanded] [ref=e277] [cursor=pointer]:
+              - generic [ref=e278]: Is Invoko always listening or watching my screen?
+              - generic [ref=e279]: +
+            - generic [ref=e281]:
+              - paragraph [ref=e282]: No. Invoko starts when you invoke it with a shortcut, tap, or request.
+              - paragraph [ref=e283]: Voice, screen context, app control, and account connectors each need their own permission.
+          - generic [ref=e285]:
+            - button "How does Invoko use screen context? +" [ref=e286] [cursor=pointer]:
+              - generic [ref=e287]: How does Invoko use screen context?
+              - generic [ref=e288]: +
+            - generic [ref=e289]:
+              - paragraph [ref=e290]: Invoko can use the current app, window title, page URL, selected text, focused field, and a screenshot when the task needs it.
+              - paragraph [ref=e291]: That context helps Invoko answer from the work already open on your Mac.
+          - generic [ref=e293]:
+            - button "Which apps and websites does Invoko work with? +" [ref=e294] [cursor=pointer]:
+              - generic [ref=e295]: Which apps and websites does Invoko work with?
+              - generic [ref=e296]: +
+            - generic [ref=e297]:
+              - paragraph [ref=e298]: "Invoko supports common Mac work surfaces: email, chat, browsers, docs, notes, code, calendars, PDFs, design files, and task tools."
+              - paragraph [ref=e299]: Covered pages can show action cards for tasks like summarize, explain, rewrite, draft, extract, capture, search, or check.
+          - generic [ref=e301]:
+            - button "What happens when Invoko guesses the wrong action? +" [ref=e302] [cursor=pointer]:
+              - generic [ref=e303]: What happens when Invoko guesses the wrong action?
+              - generic [ref=e304]: +
+            - generic [ref=e305]:
+              - paragraph [ref=e306]: The cards are shortcuts.
+              - paragraph [ref=e307]: If Invoko shows the wrong next move, type or speak what you want in the same panel. Some actions answer in-panel, some replace selected text, and longer tasks can move into the agent flow.
+          - generic [ref=e309]:
+            - button "Can Invoko run tasks across apps? +" [ref=e310] [cursor=pointer]:
+              - generic [ref=e311]: Can Invoko run tasks across apps?
+              - generic [ref=e312]: +
+            - generic [ref=e313]:
+              - paragraph [ref=e314]: Yes, when you ask it to.
+              - paragraph [ref=e315]: Short tasks can stay in the panel. Longer work can run through a background agent that opens targets, reads allowed context, uses authorized tools, schedules work, or brings the result back.
+          - generic [ref=e317]:
+            - button "Do I need to connect Gmail, Notion, Calendar, Slack, or GitHub? +" [ref=e318] [cursor=pointer]:
+              - generic [ref=e319]: Do I need to connect Gmail, Notion, Calendar, Slack, or GitHub?
+              - generic [ref=e320]: +
+            - generic [ref=e321]:
+              - paragraph [ref=e322]: No. Core voice, screen, reply, and writing flows work without connected accounts.
+              - paragraph [ref=e323]: Account connectors unlock deeper actions, and Invoko asks before using a connected account.
+          - generic [ref=e325]:
+            - button "How does Invoko memory work? +" [ref=e326] [cursor=pointer]:
+              - generic [ref=e327]: How does Invoko memory work?
+              - generic [ref=e328]: +
+            - generic [ref=e329]:
+              - paragraph [ref=e330]: Invoko can use recent turns, task history, saved context, artifacts, and learned preferences to help follow-up requests.
+              - paragraph [ref=e331]: It does not need to remember your whole desktop to keep useful context.
+          - generic [ref=e333]:
+            - button "What data does Invoko store? +" [ref=e334] [cursor=pointer]:
+              - generic [ref=e335]: What data does Invoko store?
+              - generic [ref=e336]: +
+            - generic [ref=e337]:
+              - paragraph [ref=e338]: Invoko stores the context needed for history, memory, saved artifacts, and task continuity.
+              - paragraph [ref=e339]: Voice recordings and screenshots are not retained by default.
+          - generic [ref=e341]:
+            - button "Which Macs are supported? +" [ref=e342] [cursor=pointer]:
+              - generic [ref=e343]: Which Macs are supported?
+              - generic [ref=e344]: +
+            - generic [ref=e345]:
+              - paragraph [ref=e346]: Invoko is built for macOS and currently targets Apple Silicon Macs during beta.
+              - paragraph [ref=e347]: Intel Mac support depends on the download option available for your device.
+      - generic [ref=e348]:
+        - generic [ref=e349]:
+          - paragraph [ref=e351]: macOS · Apple Silicon · Free Beta
+          - heading "Start working with your voice." [level=2] [ref=e353]:
+            - text: Start working
+            - text: with your voice.
+          - button "Download for Mac" [ref=e355] [cursor=pointer]
+        - generic [ref=e358]:
+          - generic [ref=e360]:
+            - heading "Curious if Invoko is right for you?" [level=2] [ref=e361]
+            - paragraph [ref=e362]: Ask your favorite AI if Invoko fits your workflow, where it saves time, and what you should try first.
+          - generic [ref=e363]:
+            - button "Ask ChatGPT about Invoko" [ref=e365] [cursor=pointer]:
+              - img [ref=e366]
+              - text: Ask ChatGPT
+            - button "Ask Claude about Invoko" [ref=e368] [cursor=pointer]:
+              - img [ref=e369]
+              - text: Ask Claude
+            - button "Ask Perplexity about Invoko" [ref=e371] [cursor=pointer]:
+              - img [ref=e372]
+              - text: Ask Perplexity
+        - generic [ref=e374]:
+          - generic [ref=e375]:
+            - generic [ref=e376]:
+              - link "Invoko" [ref=e377] [cursor=pointer]:
+                - /url: /
+                - generic [ref=e379]: Invoko
+              - button "Download for Mac" [ref=e380] [cursor=pointer]
+            - generic [ref=e381]:
+              - paragraph [ref=e382]: Company
+              - link "Contact" [ref=e383] [cursor=pointer]:
+                - /url: mailto:hey@invoko.ai
+              - link "Privacy" [ref=e384] [cursor=pointer]:
+                - /url: /privacy/
+              - link "Terms" [ref=e385] [cursor=pointer]:
+                - /url: /terms/
+            - generic [ref=e386]:
+              - paragraph [ref=e387]: Product
+              - link "Pricing" [ref=e388] [cursor=pointer]:
+                - /url: /#pricing
+              - link "FAQ" [ref=e389] [cursor=pointer]:
+                - /url: /#faq
+            - generic [ref=e390]:
+              - paragraph [ref=e391]: Resources
+              - link "Data security" [ref=e392] [cursor=pointer]:
+                - /url: /privacy/
+              - link "Beta feedback" [ref=e393] [cursor=pointer]:
+                - /url: mailto:hey@invoko.ai
+          - generic [ref=e394]:
+            - generic: Invoko
+            - img
+          - generic [ref=e395]:
+            - generic [ref=e397]: © 2026 Ampliftai Inc. All rights reserved. Invoko is a product of Ampliftai Inc.
+            - generic [ref=e398]:
+              - link "X" [ref=e399] [cursor=pointer]:
+                - /url: https://x.com/invoko_ai
+                - img [ref=e400]
+              - link "TikTok" [ref=e402] [cursor=pointer]:
+                - /url: https://www.tiktok.com/@invoko_ai
+                - img [ref=e403]
+              - link "Instagram" [ref=e405] [cursor=pointer]:
+                - /url: https://www.instagram.com/invoko_ai/
+                - img [ref=e406]
+              - link "YouTube" [ref=e410] [cursor=pointer]:
+                - /url: https://www.youtube.com/@invoko_ai
+                - img [ref=e411]
+              - link "Discord" [ref=e413] [cursor=pointer]:
+                - /url: https://discord.gg/qc6htqDAZC
+                - img [ref=e414]
+  - alert [ref=e416]

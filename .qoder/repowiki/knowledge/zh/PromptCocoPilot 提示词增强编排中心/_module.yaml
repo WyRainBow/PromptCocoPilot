@@ -1,0 +1,11 @@
+schema_version: 1
+module_path: ""
+title: PromptCocoPilot 提示词增强编排中心
+scope:
+    - README.md
+    - package.json
+    - .gitignore
+    - skill/
+source_files: []
+depends_on: []
+related_to: []

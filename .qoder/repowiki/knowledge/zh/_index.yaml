@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-06-29T12:50:50Z"
+exported_at: "2026-06-30T03:30:50Z"
 modules:
     "":
-        dir_name: PromptCocoPilot 跨模态提示词增强编排层
-        title: PromptCocoPilot 跨模态提示词增强编排层
+        dir_name: PromptCocoPilot 提示词增强编排中心
+        title: PromptCocoPilot 提示词增强编排中心
         scope:
             - README.md
             - package.json
@@ -37,8 +37,8 @@ modules:
         depends_on: []
         related_to: []
     claude_ui:
-        dir_name: Claude Code 跨语言悬浮增强 UI
-        title: Claude Code 跨语言悬浮增强 UI
+        dir_name: Claude Code 会话感知悬浮增强 UI
+        title: Claude Code 会话感知悬浮增强 UI
         scope:
             - claude-ui/
         source_files: []

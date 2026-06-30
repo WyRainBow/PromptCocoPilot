@@ -5,6 +5,8 @@
 - [README.md](file://README.md)
 - [docs/claude-code-integration.md](file://docs/claude-code-integration.md)
 - [docs/install.md](file://docs/install.md)
+- [docs/TECH_SCHEME.md](file://docs/TECH_SCHEME.md)
+- [docs/qoder-integration.md](file://docs/qoder-integration.md)
 - [mcp-server/server.py](file://mcp-server/server.py)
 - [mcp-server/enhance.py](file://mcp-server/enhance.py)
 - [mcp-server/context_packaging.py](file://mcp-server/context_packaging.py)
@@ -23,7 +25,18 @@
 - [claude-ui/src/floating_webview.py](file://claude-ui/src/floating_webview.py)
 - [claude-ui/src/invoko_card.py](file://claude-ui/src/invoko_card.py)
 - [claude-ui/src/session_reader.py](file://claude-ui/src/session_reader.py)
+- [claude-ui/swift/Sources/App.swift](file://claude-ui/swift/Sources/App.swift)
+- [claude-ui/swift/Sources/IslandView.swift](file://claude-ui/swift/Sources/IslandView.swift)
+- [claude-ui/swift/Sources/SessionReader.swift](file://claude-ui/swift/Sources/SessionReader.swift)
+- [claude-ui/swift/build.sh](file://claude-ui/swift/build.sh)
 </cite>
+
+## 更新摘要
+**变更内容**
+- 新增多代理会话管理功能，支持 Claude Code、Codex 和 Qoder 三种代理
+- 增强会话聚合功能，提供统一的会话列表和差异化处理
+- 实现多代理会话 ID 前缀机制，确保会话唯一性
+- 添加代理识别和颜色标识系统，提升用户体验
 
 ## 目录
 1. [简介](#简介)
@@ -31,21 +44,22 @@
 3. [核心组件](#核心组件)
 4. [架构总览](#架构总览)
 5. [组件详解](#组件详解)
-6. [桌面界面选项](#桌面界面选项)
-7. [依赖关系分析](#依赖关系分析)
-8. [性能考量](#性能考量)
-9. [故障排除指南](#故障排除指南)
-10. [结论](#结论)
-11. [附录](#附录)
+6. [多代理会话管理](#多代理会话管理)
+7. [桌面界面选项](#桌面界面选项)
+8. [依赖关系分析](#依赖关系分析)
+9. [性能考量](#性能考量)
+10. [故障排除指南](#故障排除指南)
+11. [结论](#结论)
+12. [附录](#附录)
 
 ## 简介
-本文件面向希望在 Claude Code 开发环境中集成 PromptCocoPilot 的工程师与使用者，系统讲解如何将 MCP 服务器与 Skill 集成到 Claude Code，涵盖 MCP Server 的配置步骤、环境变量与命令参数设置、Skill 的安装与目录结构、三种使用方式（自动触发、显式调用、结构化上下文传递）、**新增的三种桌面界面选项**（拖拽卡片界面、浮动 WebView 界面、Invoko 卡片界面）、当前实现的局限性与推荐改进方案，以及常见问题的诊断与解决思路。
+本文件面向希望在 Claude Code 开发环境中集成 PromptCocoPilot 的工程师与使用者，系统讲解如何将 MCP 服务器与 Skill 集成到 Claude Code，涵盖 MCP Server 的配置步骤、环境变量与命令参数设置、Skill 的安装与目录结构、三种使用方式（自动触发、显式调用、结构化上下文传递）、**新增的多代理会话管理功能**（支持 Claude Code、Codex、Qoder 三种代理的统一会话聚合）、**新增的三种桌面界面选项**（拖拽卡片界面、浮动 WebView 界面、Invoko 卡片界面）、当前实现的局限性与推荐改进方案，以及常见问题的诊断与解决思路。
 
 ## 项目结构
-该项目围绕"MCP 工具 + Skill + 桌面界面"的三轨集成展开，核心模块包括：
+该项目围绕"MCP 工具 + Skill + 桌面界面 + 多代理会话管理"的四轨集成展开，核心模块包括：
 - mcp-server：提供 MCP 工具"enhance_prompt"，内置真实 LLM 调用（Dashscope/DeepSeek）与上下文打包能力
 - skill：提供 Claude Code 的 Skill 描述文件，定义何时调用工具、如何传递上下文
-- **新增** claude-ui：提供三种桌面界面选项，包括拖拽卡片、浮动 WebView 和 Invoko 卡片
+- **新增** claude-ui：提供三种桌面界面选项，包括拖拽卡片、浮动 WebView 和 Invoko 卡片，支持多代理会话管理
 - examples：演示如何组装上下文、如何调用工具、如何验证增强效果
 - tests：覆盖核心增强逻辑与上下文打包的单元测试
 - docs：集成与安装说明、技术方案与 Claude Code 集成指南
@@ -66,6 +80,7 @@ Skill["Skill 描述<br/>SKILL.md"]
 UI1["拖拽卡片界面<br/>claude-drag.py"]
 UI2["浮动 WebView 界面<br/>claude-float.py"]
 UI3["Invoko 卡片界面<br/>claude-webview.py"]
+MultiAgent["多代理会话管理<br/>SessionReader.swift"]
 Ex1["示例：增强下一轮问题<br/>enhance-next-turn.py"]
 Ex2["示例：上下文组装<br/>context-assembly.py"]
 Ex3["示例 JSON<br/>next-turn-context.json"]
@@ -80,6 +95,9 @@ Skill -. 配合 .-> CC_Skill
 UI1 -. 桌面界面 .-> CC_UI
 UI2 -. 桌面界面 .-> CC_UI
 UI3 -. 桌面界面 .-> CC_UI
+MultiAgent -. 会话聚合 .-> UI1
+MultiAgent -. 会话聚合 .-> UI2
+MultiAgent -. 会话聚合 .-> UI3
 Ex1 -. 验证 .-> Enh
 Ex2 -. 验证 .-> Ctx
 Ex3 -. 示例 .-> Ex1
@@ -94,6 +112,7 @@ Ex3 -. 示例 .-> Ex1
 - [claude-ui/bin/claude-drag.py:1-34](file://claude-ui/bin/claude-drag.py#L1-L34)
 - [claude-ui/bin/claude-float.py:1-30](file://claude-ui/bin/claude-float.py#L1-L30)
 - [claude-ui/bin/claude-webview.py:1-14](file://claude-ui/bin/claude-webview.py#L1-L14)
+- [claude-ui/swift/Sources/SessionReader.swift:1-304](file://claude-ui/swift/Sources/SessionReader.swift#L1-L304)
 
 **章节来源**
 - [README.md:23-29](file://README.md#L23-L29)
@@ -117,9 +136,13 @@ Ex3 -. 示例 .-> Ex1
 - 本地 HTTP API（http_server.py）
   - 为 Codex 风格"优化输入"按钮提供本地 HTTP 端点
   - 用于外部薄客户端或扩展将输入草稿与上下文 POST 至本地端点
+- **新增** 多代理会话管理（SessionReader.swift）
+  - 支持 Claude Code、Codex、Qoder 三种代理的统一会话聚合
+  - 实现会话 ID 前缀机制，确保跨代理会话唯一性
+  - 提供代理识别和差异化处理，包括颜色标识和会话状态管理
 - **新增** 桌面界面（claude-ui）
   - 提供三种直观的桌面界面选项，替代传统的命令行和 HTTP API
-  - 支持会话检测、上下文自动填充和一键增强功能
+  - 支持多代理会话检测、上下文自动填充和一键增强功能
 
 **章节来源**
 - [mcp-server/server.py:49-80](file://mcp-server/server.py#L49-L80)
@@ -127,9 +150,10 @@ Ex3 -. 示例 .-> Ex1
 - [mcp-server/context_packaging.py:7-33](file://mcp-server/context_packaging.py#L7-L33)
 - [skill/SKILL.md:1-105](file://skill/SKILL.md#L1-L105)
 - [mcp-server/http_server.py:22-36](file://mcp-server/http_server.py#L22-L36)
+- [claude-ui/swift/Sources/SessionReader.swift:3-5](file://claude-ui/swift/Sources/SessionReader.swift#L3-L5)
 
 ## 架构总览
-下图展示了 Claude Code 与 PromptCocoPilot 的交互路径：Claude 通过 MCP 发现工具；Skill 决定何时调用工具并如何传递上下文；MCP 服务器内部调用增强器，结合真实 LLM 生成增强提示词；最终返回给 Claude 供用户审阅与发送。**新增的桌面界面提供了更直观的用户体验**。
+下图展示了 Claude Code 与 PromptCocoPilot 的交互路径：Claude 通过 MCP 发现工具；Skill 决定何时调用工具并如何传递上下文；MCP 服务器内部调用增强器，结合真实 LLM 生成增强提示词；最终返回给 Claude 供用户审阅与发送。**新增的多代理会话管理和桌面界面提供了更直观和高效的用户体验**。
 
 ```mermaid
 sequenceDiagram
@@ -280,10 +304,95 @@ CC-->>U : 呈现 before/after 并等待确认
 - [tests/test_enhance.py:10-60](file://tests/test_enhance.py#L10-L60)
 - [tests/test_context_packaging.py:19-146](file://tests/test_context_packaging.py#L19-L146)
 
+## 多代理会话管理
+
+### 概述
+**新增**的多代理会话管理功能是 PromptCocoPilot 的重要增强，它实现了对 Claude Code、Codex 和 Qoder 三种 AI 代理的统一会话聚合与管理。该功能通过会话 ID 前缀机制确保跨代理会话的唯一性，并提供代理识别和差异化处理，显著提升了用户的多会话管理体验。
+
+### 会话聚合架构
+多代理会话管理的核心是 `SessionReader` 类，它负责从不同代理的存储位置读取会话数据，并将其聚合到一个统一的列表中。
+
+- **支持的代理类型**
+  - Claude Code：存储在 `~/.claude/sessions/` 和 `~/.claude/projects/`
+  - Codex：存储在 `~/.codex/sessions/` 和 `~/.codex/session_index.jsonl`
+  - Qoder：存储在 `~/.qoder/projects/`（与 Claude 类似但有特殊处理）
+
+- **会话 ID 前缀机制**
+  - Claude Code：`claude:sessionId`
+  - Codex：`codex:sessionId`
+  - Qoder：`qoder:sessionName`
+  - 这种机制确保即使不同代理使用相同的会话 ID，也能在聚合列表中唯一标识
+
+**章节来源**
+- [claude-ui/swift/Sources/SessionReader.swift:42-43](file://claude-ui/swift/Sources/SessionReader.swift#L42-L43)
+- [claude-ui/swift/Sources/SessionReader.swift:144-150](file://claude-ui/swift/Sources/SessionReader.swift#L144-L150)
+- [claude-ui/swift/Sources/SessionReader.swift:221-226](file://claude-ui/swift/Sources/SessionReader.swift#L221-L226)
+- [claude-ui/swift/Sources/SessionReader.swift:272-277](file://claude-ui/swift/Sources/SessionReader.swift#L272-L277)
+
+### 代理识别与差异化处理
+系统通过 `AgentKind` 枚举来识别不同的代理类型，并为每种代理提供独特的视觉标识和处理逻辑。
+
+- **代理枚举定义**
+  - `claude = "Claude"`：橙色标识，代表 Claude Code
+  - `codex = "Codex"`：绿色标识，代表 Codex
+  - `qoder = "Qoder"`：紫色标识，代表 Qoder
+
+- **差异化处理特性**
+  - **颜色标识**：每种代理都有独特的颜色标签，便于用户快速识别
+  - **状态管理**：Claude Code 会显示忙碌状态（红色指示灯），其他代理显示空闲状态
+  - **会话名称**：根据代理类型提供友好的会话名称显示
+  - **会话 ID 截断**：为每种代理提供适当的会话 ID 显示策略
+
+**章节来源**
+- [claude-ui/swift/Sources/SessionReader.swift:3-5](file://claude-ui/swift/Sources/SessionReader.swift#L3-L5)
+- [claude-ui/swift/Sources/IslandView.swift:208-221](file://claude-ui/swift/Sources/IslandView.swift#L208-L221)
+- [claude-ui/swift/Sources/SessionReader.swift:28-31](file://claude-ui/swift/Sources/SessionReader.swift#L28-L31)
+
+### 会话读取与上下文管理
+多代理会话管理不仅提供会话聚合，还支持不同代理的上下文读取和处理。
+
+- **会话候选者扫描**
+  - Claude Code：扫描 `~/.claude/sessions/` 目录下的 JSON 描述文件
+  - Codex：扫描 `~/.codex/sessions/` 目录下的 JSONL 文件
+  - Qoder：扫描 `~/.qoder/projects/` 目录下的 JSONL 文件
+
+- **上下文解析差异**
+  - **Claude Code**：解析 JSONL 格式的对话日志，提取用户和助手的消息
+  - **Codex**：解析特殊的会话元数据格式，支持线程名称映射
+  - **Qoder**：解析与 Claude 相似的 JSONL 格式，但需要从文件内容中提取 cwd 信息
+
+- **活动时间计算**
+  - 基于会话日志文件的最后修改时间计算会话活跃度
+  - 支持相对时间显示（如"刚刚"、"几分钟前"、"几小时前"等）
+
+**章节来源**
+- [claude-ui/swift/Sources/SessionReader.swift:131-154](file://claude-ui/swift/Sources/SessionReader.swift#L131-L154)
+- [claude-ui/swift/Sources/SessionReader.swift:200-230](file://claude-ui/swift/Sources/SessionReader.swift#L200-L230)
+- [claude-ui/swift/Sources/SessionReader.swift:252-281](file://claude-ui/swift/Sources/SessionReader.swift#L252-L281)
+- [claude-ui/swift/Sources/SessionReader.swift:60-67](file://claude-ui/swift/Sources/SessionReader.swift#L60-L67)
+
+### 会话列表与用户界面
+多代理会话管理通过 SwiftUI 界面为用户提供直观的会话选择体验。
+
+- **会话列表显示**
+  - **会话名称**：显示项目名称和路径尾部信息
+  - **活跃度信息**：显示会话创建时间和消息数量
+  - **代理标识**：显示代理类型的彩色徽章
+  - **会话 ID**：显示截断后的会话 ID，便于区分同名会话
+
+- **交互功能**
+  - **会话切换**：点击会话项即可切换到对应的会话
+  - **刷新功能**：支持手动刷新会话列表
+  - **状态指示**：忙碌状态的会话会显示红色指示灯
+
+**章节来源**
+- [claude-ui/swift/Sources/IslandView.swift:249-291](file://claude-ui/swift/Sources/IslandView.swift#L249-L291)
+- [claude-ui/swift/Sources/SessionReader.swift:285-289](file://claude-ui/swift/Sources/SessionReader.swift#L285-L289)
+
 ## 桌面界面选项
 
 ### 概述
-**新增**的三种桌面界面选项为用户提供更加直观和便捷的使用体验，替代传统的命令行和 HTTP API 方式。这些界面都集成了会话检测、上下文自动填充和一键增强功能。
+**新增**的三种桌面界面选项为用户提供更加直观和便捷的使用体验，替代传统的命令行和 HTTP API 方式。这些界面都集成了多代理会话管理功能，能够自动检测和管理来自 Claude Code、Codex 和 Qoder 的会话。
 
 ### 拖拽卡片界面（Draggable Card）
 - 特点
@@ -291,6 +400,7 @@ CC-->>U : 呈现 before/after 并等待确认
   - 支持 Fn+F1 快捷键快速唤起
   - 自动应用增强结果到当前选中文本
   - 岛屿式折叠设计，节省空间
+  - **新增**：支持多代理会话选择和上下文读取
 - 适用场景
   - 需要快速增强当前选中文本的开发者
   - 偏好 macOS 原生界面的用户
@@ -306,17 +416,18 @@ CC-->>U : 呈现 before/after 并等待确认
 ### 浮动 WebView 界面（Floating WebView）
 - 特点
   - 动态岛风格设计，类似 iOS 的动态岛体验
-  - 支持会话列表切换，可选择不同的 Claude Code 会话
+  - 支持多代理会话列表切换，可选择不同的 Claude Code、Codex 或 Qoder 会话
   - 自动检测并填充剪贴板内容
   - 支持复制增强结果到剪贴板
+  - **新增**：会话列表中显示代理类型和颜色标识
 - 适用场景
   - 需要同时管理多个项目会话的高级用户
   - 偏好现代化 UI 设计的用户
   - 需要更多上下文控制的复杂场景
 - 会话管理
-  - 自动刷新可用会话列表
+  - 自动刷新可用会话列表，支持三种代理的统一管理
   - 支持手动切换不同项目会话
-  - 实时显示每个会话的消息数量
+  - 实时显示每个会话的消息数量和代理类型
 
 **章节来源**
 - [claude-ui/bin/claude-float.py:1-30](file://claude-ui/bin/claude-float.py#L1-L30)
@@ -328,6 +439,7 @@ CC-->>U : 呈现 before/after 并等待确认
   - 无独立窗口，直接作为卡片叠加在当前应用上
   - 支持热键唤起（默认 Fn 键）
   - 纯卡片式交互，无多余装饰
+  - **新增**：支持多代理会话的快速切换和上下文读取
 - 适用场景
   - 追求极简主义的用户
   - 需要最小化干扰的专注工作场景
@@ -342,35 +454,39 @@ CC-->>U : 呈现 before/after 并等待确认
 - [claude-ui/src/invoko_card.py:1-300](file://claude-ui/src/invoko_card.py#L1-L300)
 
 ### 会话读取与上下文管理
-所有桌面界面都集成了会话读取功能，能够自动检测当前活跃的 Claude Code 会话并提取对话上下文。
+所有桌面界面都集成了多代理会话读取功能，能够自动检测当前活跃的 Claude Code、Codex 或 Qoder 会话并提取对话上下文。
 
-- 会话检测
-  - 读取 ~/.claude/sessions/ 目录下的会话描述文件
-  - 支持按活跃度和时间排序
-  - 自动解析 JSONL 格式的对话历史
-- 上下文提取
+- **会话检测**
+  - 读取 ~/.claude/sessions/、~/.codex/sessions/ 和 ~/.qoder/projects/ 目录下的会话描述文件
+  - 支持按活跃度和时间排序，自动解析 JSONL 格式的对话历史
+  - **新增**：支持三种代理的统一会话聚合和差异化处理
+- **上下文提取**
   - 支持提取最近 N 条消息
   - 自动过滤非文本内容
   - 保持对话角色信息（user/assistant）
-- 跨平台支持
+  - **新增**：支持不同代理的消息格式解析和上下文压缩
+- **跨平台支持**
   - macOS 原生支持系统选区和剪贴板
   - 通过 pbcopy/pbpaste 实现跨应用内容交换
   - 支持热键配置和快捷键管理
+  - **新增**：支持多代理会话 ID 前缀机制，确保会话唯一性
 
 **章节来源**
-- [claude-ui/src/session_reader.py:1-120](file://claude-ui/src/session_reader.py#L1-L120)
+- [claude-ui/src/session_reader.py:1-124](file://claude-ui/src/session_reader.py#L1-L124)
+- [claude-ui/swift/Sources/SessionReader.swift:42-289](file://claude-ui/swift/Sources/SessionReader.swift#L42-L289)
 
 ## 依赖关系分析
 - 组件耦合
   - server.py 依赖 enhance.py 与 context_packaging.py
   - enhance.py 依赖 context_packaging.py（PromptContext）
   - http_server.py 依赖 server.py 的工具处理函数
-  - **新增** desktop UI 组件依赖 session_reader.py 进行会话管理
+  - **新增** desktop UI 组件依赖 session_reader.py 和 SessionReader.swift 进行多代理会话管理
 - 外部依赖
   - requests（HTTP 调用 Dashscope）
   - mcp（可选，官方 SDK；当前 server.py 为最小 stdio 实现）
   - **新增** pywebview（桌面界面渲染）
   - **新增** osascript（macOS 系统交互）
+  - **新增** Cocoa、SwiftUI、Combine（多代理会话管理的 Swift 组件）
 - 环境变量
   - DASHSCOPE_API_KEY：真实增强的关键开关
   - ENHANCE_MODEL：增强模型选择
@@ -384,15 +500,20 @@ SV --> CP["context_packaging.py"]
 EN --> CP
 HS["http_server.py"] --> SV
 UI["desktop UI"] --> SR["session_reader.py"]
+UI --> SRSwift["SessionReader.swift"]
 UI --> SV
 EN --> REQ["requests"]
+SRSwift --> Cocoa["Cocoa Framework"]
+SRSwift --> SwiftUI["SwiftUI Framework"]
+SRSwift --> Combine["Combine Framework"]
 ```
 
 **图表来源**
 - [mcp-server/server.py:35-40](file://mcp-server/server.py#L35-L40)
 - [mcp-server/enhance.py:17-20](file://mcp-server/enhance.py#L17-L20)
 - [mcp-server/http_server.py:13-16](file://mcp-server/http_server.py#L13-L16)
-- [claude-ui/src/session_reader.py:1-120](file://claude-ui/src/session_reader.py#L1-L120)
+- [claude-ui/src/session_reader.py:1-124](file://claude-ui/src/session_reader.py#L1-L124)
+- [claude-ui/swift/Sources/SessionReader.swift:1-304](file://claude-ui/swift/Sources/SessionReader.swift#L1-L304)
 
 **章节来源**
 - [mcp-server/server.py:35-40](file://mcp-server/server.py#L35-L40)
@@ -410,6 +531,11 @@ EN --> REQ["requests"]
   - 默认使用快速模型（如 deepseek-v4-flash），降低延迟与 Token 消耗
 - I/O 与并发
   - HTTP API 使用多线程服务器，适合轻量集成场景
+- **新增** 多代理会话管理性能
+  - Swift 实现的会话读取优化，支持文件尾部读取和内存映射
+  - 会话列表缓存机制，避免频繁文件系统访问
+  - 多代理会话聚合的增量更新，减少不必要的重新扫描
+  - **新增**：会话 ID 前缀机制减少会话冲突和重复处理
 - **新增** 桌面界面性能
   - pywebview 窗口渲染优化，支持透明背景和无边框设计
   - 会话读取缓存机制，避免频繁文件系统访问
@@ -420,6 +546,7 @@ EN --> REQ["requests"]
 - [mcp-server/context_packaging.py:42-52](file://mcp-server/context_packaging.py#L42-L52)
 - [mcp-server/context_packaging.py:60-76](file://mcp-server/context_packaging.py#L60-L76)
 - [mcp-server/enhance.py:25](file://mcp-server/enhance.py#L25)
+- [claude-ui/swift/Sources/SessionReader.swift:75-83](file://claude-ui/swift/Sources/SessionReader.swift#L75-L83)
 
 ## 故障排除指南
 - 重启后看不到工具
@@ -434,6 +561,11 @@ EN --> REQ["requests"]
   - 确认 DASHSCOPE_API_KEY 已设置，或 .env 文件存在且包含该键值
 - 结构化参数未被识别
   - 确保传入的字段类型与 server.py 的 inputSchema 一致
+- **新增** 多代理会话管理问题
+  - 会话列表为空：检查 ~/.claude、~/.codex、~/.qoder 目录是否存在和权限
+  - 代理识别错误：确认会话文件格式符合预期，特别是 Qoder 的 cwd 提取
+  - 会话 ID 冲突：检查是否使用了相同的会话 ID，系统会自动通过前缀区分
+  - Swift 组件编译失败：确保已安装 Swift 命令行工具和必要的框架
 - **新增** 桌面界面问题
   - pywebview 未安装：`pip install pywebview`
   - macOS 权限问题：检查系统设置中的辅助功能权限
@@ -444,9 +576,10 @@ EN --> REQ["requests"]
 - [docs/claude-code-integration.md:180-190](file://docs/claude-code-integration.md#L180-L190)
 - [docs/install.md:35-41](file://docs/install.md#L35-L41)
 - [mcp-server/enhance.py:27-37](file://mcp-server/enhance.py#L27-L37)
+- [claude-ui/swift/Sources/SessionReader.swift:42-289](file://claude-ui/swift/Sources/SessionReader.swift#L42-L289)
 
 ## 结论
-通过 MCP 服务器与 Skill 的协同，PromptCocoPilot 能够在 Claude Code 中实现"上下文感知的提示词增强"。**新增的三种桌面界面选项进一步提升了用户体验**，提供了比传统命令行和 HTTP API 更直观的操作方式。当前实现已支持真实 LLM 增强（Dashscope/DeepSeek），并通过结构化上下文与智能截断显著提升增强质量。建议在生产环境中配置 API Key 与合适的模型，以获得更接近 Kilo Code 的体验；同时可结合本地 HTTP API 为 Codex 场景提供"优化输入"按钮能力。**桌面界面的引入使得 PromptCocoPilot 更加易用和高效**。
+通过 MCP 服务器与 Skill 的协同，PromptCocoPilot 能够在 Claude Code 中实现"上下文感知的提示词增强"。**新增的多代理会话管理功能进一步提升了用户体验，支持 Claude Code、Codex 和 Qoder 三种代理的统一会话聚合与管理**，并通过会话 ID 前缀机制确保跨代理会话的唯一性。**新增的三种桌面界面选项（拖拽卡片、浮动 WebView、Invoko 卡片）提供了比传统命令行和 HTTP API 更直观的操作方式**，结合多代理会话管理功能，使得用户能够在不同 AI 代理之间无缝切换和管理会话。当前实现已支持真实 LLM 增强（Dashscope/DeepSeek），并通过结构化上下文与智能截断显著提升增强质量。建议在生产环境中配置 API Key 与合适的模型，以获得更接近 Kilo Code 的体验；同时可结合本地 HTTP API 为 Codex 场景提供"优化输入"按钮能力。**多代理会话管理的引入使得 PromptCocoPilot 成为真正意义上的多代理会话管理工具，大大增强了其在现代 AI 开发环境中的实用性**。
 
 ## 附录
 
@@ -486,6 +619,27 @@ EN --> REQ["requests"]
 **章节来源**
 - [mcp-server/http_server.py:86-96](file://mcp-server/http_server.py#L86-L96)
 
+### 多代理会话管理使用指南
+
+#### 会话聚合功能
+- **统一会话列表**：系统会自动扫描 ~/.claude、~/.codex、~/.qoder 目录，将三个代理的会话聚合到一个列表中
+- **会话 ID 前缀**：Claude Code 会话以 "claude:" 前缀标识，Codex 会话以 "codex:" 前缀标识，Qoder 会话以 "qoder:" 前缀标识
+- **代理识别**：会话列表中显示彩色徽章标识代理类型，Claude（橙色）、Codex（绿色）、Qoder（紫色）
+
+#### 会话切换操作
+- **桌面界面**：在浮动 WebView 界面中，点击会话选择器可以看到所有代理的会话列表
+- **状态显示**：Claude Code 会话如果处于忙碌状态会显示红色指示灯
+- **会话详情**：鼠标悬停可以看到会话的完整信息，包括项目路径、消息数量和会话 ID
+
+#### 上下文读取
+- **自动上下文**：选择会话后，系统会自动读取该会话的对话历史作为增强上下文
+- **消息数量限制**：默认读取最近 40 条消息，可根据需要调整
+- **格式兼容**：支持不同代理的消息格式解析，确保上下文准确性
+
+**章节来源**
+- [claude-ui/swift/Sources/SessionReader.swift:42-289](file://claude-ui/swift/Sources/SessionReader.swift#L42-L289)
+- [claude-ui/swift/Sources/IslandView.swift:249-291](file://claude-ui/swift/Sources/IslandView.swift#L249-L291)
+
 ### 桌面界面使用指南
 
 #### 拖拽卡片界面使用
@@ -498,6 +652,7 @@ EN --> REQ["requests"]
 - 启动：`npm run claude:ui`
 - 会话管理：点击右上角按钮刷新会话列表
 - 增强流程：输入草稿 → 点击"增强" → 复制结果
+- **新增**：会话列表支持多代理会话切换，显示代理类型和颜色标识
 
 #### Invoko 卡片界面使用
 - 启动：`npm run claude:card`
@@ -505,16 +660,17 @@ EN --> REQ["requests"]
 - 应用：点击"应用并关闭"将增强结果复制到剪贴板
 
 #### 通用功能
-- 会话检测：自动检测当前活跃的 Claude Code 会话
+- 会话检测：自动检测当前活跃的 Claude Code、Codex 或 Qoder 会话
 - 上下文填充：从系统选区或剪贴板自动获取内容
 - 一键增强：简化复杂的增强流程
 - 多种样式：根据个人偏好选择不同的界面风格
+- **新增**：多代理会话管理：支持三种代理的统一会话聚合和切换
 
 **章节来源**
 - [claude-ui/bin/claude-drag.py:1-34](file://claude-ui/bin/claude-drag.py#L1-L34)
 - [claude-ui/bin/claude-float.py:1-30](file://claude-ui/bin/claude-float.py#L1-L30)
 - [claude-ui/bin/claude-webview.py:1-14](file://claude-ui/bin/claude-webview.py#L1-L14)
-- [package.json:16-20](file://package.json#L16-L20)
+- [package.json:16-23](file://package.json#L16-L23)
 
 ### 示例 JSON（下一轮问题上下文）
 - draft、conversation、code_facts、task_state、current_file、selected_code、user_preferences
@@ -522,3 +678,29 @@ EN --> REQ["requests"]
 
 **章节来源**
 - [examples/next-turn-context.json:1-33](file://examples/next-turn-context.json#L1-L33)
+
+### 多代理会话管理技术细节
+
+#### 会话 ID 前缀机制
+- **Claude Code**：`claude:sessionId` - 使用原始会话 ID，前缀为 "claude:"
+- **Codex**：`codex:sessionId` - 使用会话 ID 或文件名，前缀为 "codex:"
+- **Qoder**：`qoder:sessionName` - 使用文件名作为会话 ID，前缀为 "qoder:"
+- **唯一性保证**：通过前缀机制确保不同代理间的会话 ID 冲突不会发生
+
+#### 代理识别系统
+- **AgentKind 枚举**：定义三种代理类型及其对应的显示名称
+- **颜色标识**：每种代理使用独特的颜色徽章，便于视觉识别
+- **状态管理**：Claude Code 会显示忙碌状态，其他代理显示空闲状态
+- **会话名称映射**：Codex 支持从 session_index.jsonl 中获取更好的会话名称
+
+#### 上下文解析差异
+- **Claude Code**：解析标准 JSONL 格式，提取 user/assistant 消息
+- **Codex**：解析特殊的会话元数据格式，支持线程名称映射
+- **Qoder**：解析与 Claude 相似的 JSONL 格式，但需要从文件内容中提取 cwd 信息
+- **消息压缩**：将多条消息压缩为预览列表，便于用户快速浏览
+
+**章节来源**
+- [claude-ui/swift/Sources/SessionReader.swift:3-5](file://claude-ui/swift/Sources/SessionReader.swift#L3-L5)
+- [claude-ui/swift/Sources/SessionReader.swift:144-150](file://claude-ui/swift/Sources/SessionReader.swift#L144-L150)
+- [claude-ui/swift/Sources/SessionReader.swift:221-226](file://claude-ui/swift/Sources/SessionReader.swift#L221-L226)
+- [claude-ui/swift/Sources/SessionReader.swift:272-277](file://claude-ui/swift/Sources/SessionReader.swift#L272-L277)

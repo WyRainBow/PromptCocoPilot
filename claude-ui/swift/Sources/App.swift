@@ -86,11 +86,26 @@ struct NotchInfo: Equatable {
     }
 }
 
+// MARK: - Mascot animation state (which .riv the cloud plays)
+
+enum MascotState: Equatable { case idle, thinking, done }
+
 // MARK: - Shared state
 
 @MainActor
 final class AppState: ObservableObject {
-    @Published var expanded = false
+    /// Cloud presence: floating on the desktop, docked into the notch, or the
+    /// expanded optimize card. (Invoko-style.)
+    enum Presence { case floating, docked, expanded }
+    @Published var presence: Presence = .floating
+    /// Fold-cue: while dragging a floating cloud into the notch zone, the island
+    /// previews docking (snapped to the notch + blue glow). Release commits, drag
+    /// away cancels. Presence stays .floating until committed.
+    @Published var dockPreview = false
+    /// Hovering the docked notch expands it into the wider rounded box.
+    @Published var notchHovered = false
+    /// Whether the card was opened from the docked (notch) anchor vs the floating cloud.
+    var expandedFromDock = false
     @Published var notch = NotchInfo.fallback
     @Published var sessions: [SessionInfo] = []
     @Published var selectedId = ""
@@ -102,6 +117,7 @@ final class AppState: ObservableObject {
     @Published var status = ""
     @Published var statusKind: StatusKind = .neutral
     @Published var busy = false
+    @Published var mascot: MascotState = .idle   // drives which cloud .riv plays
 
     private var conversation: [Turn] = []
 
@@ -112,10 +128,6 @@ final class AppState: ObservableObject {
     /// SwiftUI reports its measured content height so the window can hug it.
     var onHeight: ((CGFloat) -> Void)?
     func reportHeight(_ h: CGFloat) { onHeight?(h) }
-    /// Window-origin accessors so the header can drag the card (Invoko-style).
-    var getOrigin: (() -> CGPoint)?
-    var setOrigin: ((CGPoint) -> Void)?
-    private var dragAnchor: CGPoint?
     /// Refocus the app the user was in before the island, so ⌘V lands there.
     var activatePrevApp: (() -> Void)?
     /// Bring focus back to the island after a paste (keep editing).
@@ -123,13 +135,9 @@ final class AppState: ObservableObject {
     /// Suppresses collapse-on-deactivate during the apply focus dance.
     var isApplying = false
 
-    /// Move the window by a SwiftUI drag translation (y is flipped vs Cocoa).
-    func dragBy(_ t: CGSize) {
-        if dragAnchor == nil { dragAnchor = getOrigin?() }
-        guard let a = dragAnchor else { return }
-        setOrigin?(CGPoint(x: a.x + t.width, y: a.y - t.height))
-    }
-    func dragEnd() { dragAnchor = nil }
+    var isFloating: Bool { presence == .floating }
+    var isDocked: Bool { presence == .docked }
+    var isExpanded: Bool { presence == .expanded }
 
     var canApply: Bool { !result.isEmpty }
     var contextCount: Int { preview.count }
@@ -138,23 +146,53 @@ final class AppState: ObservableObject {
     }
     var selectedSession: SessionInfo? { sessions.first(where: { $0.id == selectedId }) }
 
-    func collapse() {
-        expanded = false
-        sessionListOpen = false
-        onResize?()
+    /// Double-click: cloud → card; card → back to cloud/notch.
+    func toggleExpand() {
+        switch presence {
+        case .floating: expand(fromDock: false)
+        case .docked:   expand(fromDock: true)
+        case .expanded: collapse()
+        }
     }
 
-    /// Expand instantly: flip state + resize now, then load sessions off the main
-    /// thread so reading large session JSONLs never blocks the panel opening.
-    func expand() {
-        expanded = true
+    /// Grow the card out (downward) from the cloud's current anchor. Loads
+    /// sessions off the main thread so the panel opens instantly.
+    func expand(fromDock: Bool) {
+        expandedFromDock = fromDock
+        presence = .expanded
         onResize?()
         let sel = Selection.current().trimmingCharacters(in: .whitespacesAndNewlines)
         if draft.isEmpty, !sel.isEmpty, sel.count < 500 { draft = sel }
         refreshSessions()
     }
 
-    func toggle() { expanded ? collapse() : expand() }
+    /// Collapse the card back to wherever it grew from (cloud or notch).
+    func collapse() {
+        sessionListOpen = false
+        presence = expandedFromDock ? .docked : .floating
+        onResize?()
+    }
+
+    /// Cloud absorbed into the notch (released after dragging up to it).
+    func dock() {
+        sessionListOpen = false
+        presence = .docked
+        onResize?()
+    }
+
+    /// Cloud pulled back out to the desktop (dragged down from the notch).
+    func undock() {
+        notchHovered = false
+        presence = .floating
+        onResize?()
+    }
+
+    /// Hovering the docked notch expands the box; leaving collapses it.
+    func setNotchHover(_ hovering: Bool) {
+        guard isDocked, notchHovered != hovering else { return }
+        notchHovered = hovering
+        onResize?()
+    }
 
     /// Toggle the context list and resize the card to fit it.
     func toggleContext() { contextOpen.toggle(); onResize?() }
@@ -195,6 +233,7 @@ final class AppState: ObservableObject {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return setStatus("请先输入草稿", .error) }
         busy = true
+        mascot = .thinking            // cloud "thinking" while enhancing
         setStatus("", .neutral)
         Task {
             do {
@@ -202,10 +241,22 @@ final class AppState: ObservableObject {
                     draft: text, conversation: conversation)
                 result = out
                 setStatus("✓ 增强完成", .ok)
+                mascot = .done          // cloud "fireworks" on success
+                scheduleMascotIdle()
             } catch {
                 setStatus("⚠ \(error.localizedDescription)", .error)
+                mascot = .idle
             }
             busy = false
+        }
+    }
+
+    /// Return the cloud to idle a few seconds after a "done" celebration.
+    private func scheduleMascotIdle() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) { [weak self] in
+            MainActor.assumeIsolated {
+                if self?.mascot == .done { self?.mascot = .idle }
+            }
         }
     }
 
@@ -292,8 +343,13 @@ final class IslandWindowController {
     private var globalClickMonitor: Any?
     private var dragMonitor: Any?
     private var dragStartMouseX: CGFloat?
-    private var dragStartPanelX: CGFloat?
+    private var dragStartMouseY: CGFloat?
+    private var dragStartOrigin: CGPoint?
     private var isDraggingPanel = false
+    private enum DragKind { case none, floatingMove, dockedPull, cardMove }
+    private var dragKind: DragKind = .none
+    /// The floating cloud's desktop position (preserved across expand/collapse).
+    private var floatingOrigin: CGPoint = .zero
 
     init() {
         let size = NSSize(width: 380, height: 32)
@@ -321,8 +377,6 @@ final class IslandWindowController {
 
         state.onResize = { [weak self] in self?.applySize() }
         state.onHeight = { [weak self] h in self?.applyMeasuredHeight(h) }
-        state.getOrigin = { [weak p] in p?.frame.origin ?? .zero }
-        state.setOrigin = { [weak self] pt in self?.moveHorizontally(to: pt.x) }
         state.refocusIsland = { [weak p] in p?.makeKey() }
 
         // Track the last external app so "应用" can refocus it before ⌘V.
@@ -341,21 +395,20 @@ final class IslandWindowController {
             else { app.activate(options: [.activateIgnoringOtherApps]) }
         }
 
-        // A nonactivating panel never gets didResignActive, so watch global
-        // clicks: click outside the panel while expanded → collapse.
+        // Click outside the card → collapse (nonactivating panels get no
+        // didResignActive).
         globalClickMonitor = NSEvent.addGlobalMonitorForEvents(
             matching: [.leftMouseDown, .rightMouseDown]
         ) { [weak self] _ in
             MainActor.assumeIsolated {
-                guard let self, self.state.expanded, !self.state.isApplying else { return }
+                guard let self, self.state.isExpanded, !self.state.isApplying else { return }
                 if self.panel.frame.contains(NSEvent.mouseLocation) { return }
                 self.state.collapse()
             }
         }
 
-        // Horizontal drag via absolute mouse position (smooth — a SwiftUI
-        // DragGesture jitters because its translation re-references the moving
-        // window). Lifted from CodeIsland's setupHorizontalDragMonitor.
+        // Drag via absolute mouse position. Floating: move freely + dock into the
+        // notch when released near the top. Docked: drag down to pop the cloud out.
         dragMonitor = NSEvent.addLocalMonitorForEvents(
             matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]
         ) { [weak self] event in
@@ -365,90 +418,198 @@ final class IslandWindowController {
     }
 
     private func handleDrag(_ event: NSEvent) {
-        let threshold: CGFloat = 5
+        let threshold: CGFloat = 4
+        let m = NSEvent.mouseLocation
         switch event.type {
         case .leftMouseDown:
             if event.window === panel {
-                dragStartMouseX = NSEvent.mouseLocation.x
-                dragStartPanelX = panel.frame.origin.x
+                dragStartMouseX = m.x; dragStartMouseY = m.y
+                dragStartOrigin = panel.frame.origin
                 isDraggingPanel = false
+                dragKind = dragKindAtMouseDown(m)
             }
         case .leftMouseDragged:
-            guard let startMouseX = dragStartMouseX, let startPanelX = dragStartPanelX else { return }
-            let deltaX = NSEvent.mouseLocation.x - startMouseX
-            if !isDraggingPanel {
-                guard abs(deltaX) > threshold else { return }
+            guard let sx = dragStartMouseX, let sy = dragStartMouseY,
+                  let so = dragStartOrigin, dragKind != .none else { return }
+            let dx = m.x - sx, dy = m.y - sy
+            let sf = notchScreen().frame
+
+            switch dragKind {
+            case .dockedPull:
+                // Drag down from the notch → pop the cloud out under the cursor.
+                guard dy < -threshold else { return }
+                floatingOrigin = clampOrigin(
+                    CGPoint(x: m.x - cloudSize.width / 2, y: m.y - cloudSize.height / 2),
+                    size: cloudSize, sf: sf)
+                state.undock()
+                dragStartMouseX = m.x; dragStartMouseY = m.y
+                dragStartOrigin = floatingOrigin
+                dragKind = .floatingMove
                 isDraggingPanel = true
+
+            case .floatingMove:
+                if !isDraggingPanel {
+                    guard abs(dx) > threshold || abs(dy) > threshold else { return }
+                    isDraggingPanel = true
+                }
+                let prospective = clampOrigin(CGPoint(x: so.x + dx, y: so.y + dy),
+                                              size: cloudSize, sf: sf)
+                let cloudFrame = CGRect(origin: prospective, size: cloudSize)
+                if inDockZone(cloudFrame) {
+                    // Near the notch → snap into a fold-cue preview (glow), don't follow cursor.
+                    if !state.dockPreview { state.dockPreview = true; applyFrame(animated: true) }
+                } else {
+                    // Outside the zone → cancel any preview, resume following the cursor.
+                    floatingOrigin = prospective
+                    if state.dockPreview { state.dockPreview = false; applyFrame(animated: true) }
+                    else { panel.setFrameOrigin(prospective) }
+                }
+
+            case .cardMove:
+                if !isDraggingPanel {
+                    guard abs(dx) > threshold || abs(dy) > threshold else { return }
+                    isDraggingPanel = true
+                }
+                let size = panel.frame.size
+                let origin = clampOrigin(CGPoint(x: so.x + dx, y: so.y + dy), size: size, sf: sf)
+                panel.setFrameOrigin(origin)
+                // Free-floating card now; remember where the cloud should reappear.
+                state.expandedFromDock = false
+                floatingOrigin = CGPoint(x: origin.x + size.width / 2 - cloudSize.width / 2,
+                                         y: origin.y + size.height - cloudSize.height)
+
+            case .none:
+                break
             }
-            moveHorizontally(to: startPanelX + deltaX)
         case .leftMouseUp:
-            dragStartMouseX = nil
-            dragStartPanelX = nil
-            isDraggingPanel = false
+            let commitDock = dragKind == .floatingMove && state.dockPreview
+            // Clear drag state first so the dock transition animates (bouncy).
+            dragStartMouseX = nil; dragStartMouseY = nil; dragStartOrigin = nil
+            isDraggingPanel = false; dragKind = .none
+            if commitDock {
+                state.dockPreview = false
+                state.dock()          // commit: absorbed into the notch (animated)
+            }
         default:
             break
         }
     }
 
+    /// Decide what a mouse-down begins to drag. In the expanded card only the
+    /// header band drags (so text fields / buttons stay interactive).
+    private func dragKindAtMouseDown(_ m: CGPoint) -> DragKind {
+        switch state.presence {
+        case .floating: return .floatingMove
+        case .docked:   return .dockedPull
+        case .expanded:
+            let headerH: CGFloat = state.expandedFromDock ? max(28, state.notch.height) : 32
+            return (panel.frame.maxY - m.y) <= headerH ? .cardMove : .none
+        }
+    }
+
     func show() {
-        applyFrame(center: true)
+        floatingOrigin = defaultFloatingOrigin(notchScreen().frame)
+        applyFrame()
         panel.orderFrontRegardless()
     }
 
-    /// Hotkey summon — show, expand, focus for typing.
+    /// Hotkey summon — open the card from the current anchor and focus it.
     func summon() {
-        if !state.expanded { state.expand() }
-        applyFrame(center: false)
+        if !state.isExpanded { state.expand(fromDock: state.isDocked) }
+        applyFrame()
         panel.orderFrontRegardless()
         panel.makeKey()
     }
 
-    func resetToNotch() { applyFrame(center: true) }
+    /// Re-dock the cloud into the notch.
+    func resetToNotch() { state.dock() }
 
-    /// Expanded height tracks the content's real rendered height (reported by
-    /// SwiftUI via onHeight), so the card hugs its content with no empty padding.
+    /// Card height tracks the content's real rendered height (reported via onHeight).
     private var measuredExpandedHeight: CGFloat = 440
+    private let cloudSize = NSSize(width: 140, height: 96)
 
-    private func sizeFor(_ expanded: Bool) -> NSSize {
-        NSSize(width: 380,
-               height: expanded ? measuredExpandedHeight : max(28, state.notch.height))
+    private func modeSize() -> NSSize {
+        if state.isExpanded { return NSSize(width: 380, height: measuredExpandedHeight) }
+        let nh = max(24, state.notch.height)
+        // Preview is taller than the resident box to fit the glow halo below the notch.
+        if state.dockPreview { return NSSize(width: 300, height: nh + 78) }
+        if state.isDocked {
+            // Wide rounded bar (cloud left, dot right) but THIN — barely hangs below.
+            return state.notchHovered ? NSSize(width: 330, height: nh + 12)
+                                      : NSSize(width: 290, height: nh + 6)
+        }
+        return cloudSize
     }
 
-    /// Keep the panel attached to the very top of the notch screen. `center`
-    /// re-centers horizontally; otherwise the current x (dragged) is preserved.
-    private func applyFrame(center: Bool) {
+    /// Position per presence: floating = free origin; docked = notch top-center;
+    /// expanded = grow down from the cloud's anchor (notch when docked, else cloud).
+    private func applyFrame(animated: Bool = false) {
         let screen = notchScreen()
         state.notch = NotchInfo.detect(screen)
-        let size = sizeFor(state.expanded)
         let sf = screen.frame
-        let midX = center ? sf.midX : panel.frame.midX
-        let x = min(max(midX - size.width / 2, sf.minX), sf.maxX - size.width)
-        let y = sf.maxY - size.height          // flush with the top
-        panel.setFrame(NSRect(x: x, y: y, width: size.width, height: size.height),
-                       display: true)
+        let size = modeSize()
+        let origin: CGPoint
+        if state.isExpanded {
+            if state.expandedFromDock {
+                origin = CGPoint(x: sf.midX - size.width / 2, y: sf.maxY - size.height)
+            } else {
+                if floatingOrigin == .zero { floatingOrigin = defaultFloatingOrigin(sf) }
+                let cloudTop = floatingOrigin.y + cloudSize.height   // grow down from cloud top
+                let cx = floatingOrigin.x + cloudSize.width / 2
+                origin = clampOrigin(CGPoint(x: cx - size.width / 2, y: cloudTop - size.height),
+                                     size: size, sf: sf)
+            }
+        } else if state.dockPreview || state.isDocked {
+            origin = CGPoint(x: sf.midX - size.width / 2, y: sf.maxY - size.height)   // notch top-center
+        } else {  // floating
+            if floatingOrigin == .zero { floatingOrigin = defaultFloatingOrigin(sf) }
+            origin = clampOrigin(floatingOrigin, size: size, sf: sf)
+            floatingOrigin = origin
+        }
+        let frame = NSRect(origin: origin, size: size)
+        if animated {
+            // Springy overshoot — the cloud gets "sucked" into the notch / pops out.
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.42
+                ctx.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.9, 0.2, 1.06)
+                panel.animator().setFrame(frame, display: true)
+            }
+        } else {
+            panel.setFrame(frame, display: true)
+        }
     }
 
     func applySize() {
-        applyFrame(center: false)
-        if state.expanded { panel.makeKey() }
+        // Animate state transitions (dock/undock/expand/collapse); never while
+        // the user is actively dragging the cloud.
+        applyFrame(animated: !isDraggingPanel)
+        if state.isExpanded { panel.makeKey() }
     }
 
     /// SwiftUI reports its rendered content height; resize the card to match.
     private func applyMeasuredHeight(_ h: CGFloat) {
-        guard state.expanded else { return }
+        guard state.isExpanded else { return }
         let clamped = max(200, h.rounded(.up))
         guard abs(clamped - measuredExpandedHeight) > 0.5 else { return }
         measuredExpandedHeight = clamped
-        applyFrame(center: false)
+        applyFrame()
     }
 
-    /// Horizontal-only drag — the island stays glued to the top edge.
-    private func moveHorizontally(to x: CGFloat) {
+    // MARK: geometry helpers
+
+    private func defaultFloatingOrigin(_ sf: NSRect) -> CGPoint {
+        CGPoint(x: sf.midX - cloudSize.width / 2, y: sf.maxY - 90 - cloudSize.height)
+    }
+
+    private func clampOrigin(_ o: CGPoint, size: NSSize, sf: NSRect) -> CGPoint {
+        CGPoint(x: min(max(o.x, sf.minX), sf.maxX - size.width),
+                y: min(max(o.y, sf.minY), sf.maxY - size.height))
+    }
+
+    /// True when the floating cloud is dragged up near the notch (a dock target).
+    private func inDockZone(_ frame: NSRect) -> Bool {
         let sf = notchScreen().frame
-        let w = panel.frame.width
-        let clampedX = min(max(x, sf.minX), sf.maxX - w)
-        let y = sf.maxY - panel.frame.height
-        panel.setFrameOrigin(NSPoint(x: clampedX, y: y))
+        return frame.maxY >= sf.maxY - 44 && abs(frame.midX - sf.midX) < max(190, state.notch.width)
     }
 
     /// Prefer the screen with a physical notch; else main.

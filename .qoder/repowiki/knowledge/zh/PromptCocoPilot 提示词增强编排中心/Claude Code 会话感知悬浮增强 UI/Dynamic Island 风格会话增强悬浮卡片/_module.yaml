@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: claude_ui/swift
+title: Dynamic Island 风格会话增强悬浮卡片
+scope:
+    - claude-ui/swift/
+source_files: []
+depends_on: []
+related_to: []
