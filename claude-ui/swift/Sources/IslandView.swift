@@ -1,5 +1,20 @@
 import SwiftUI
 
+// MARK: - Color hex extension
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let r, g, b: UInt64
+        switch hex.count {
+        case 6: (r, g, b) = (int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        default: (r, g, b) = (0, 0, 0)
+        }
+        self.init(red: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255)
+    }
+}
+
 // MARK: - Palette
 // The notch is physically black, so the island background must be black to merge
 // into it (codex-island fills .black). Blue is used only as the accent.
@@ -71,37 +86,37 @@ struct IslandRoot: View {
 
     private var dockingPreview: some View {
         let nh = max(24, state.notch.height)
+        // Invoko-style glow: dark sub-frame + blue edge stroke + blue shadow
+        let glowColor = Color(red: 0.55, green: 0.78, blue: 1.0)  // #8CC5FF
         return ZStack(alignment: .top) {
-            // Wide soft halo …
-            RadialGradient(
-                gradient: Gradient(colors: [
-                    Color(red: 0.55, green: 0.78, blue: 1.0).opacity(0.5),
-                    Color(red: 0.55, green: 0.78, blue: 1.0).opacity(0.0),
-                ]),
-                center: .center, startRadius: 0, endRadius: 120)
-                .frame(width: 290, height: 165)
-                .blur(radius: 20)
-                .offset(y: nh)
+            // 1. Sub-frame: dark panel wider than notch, fills from notch band downward
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.black.opacity(0.85))
+                .frame(width: 290, height: nh + 80)
+                .offset(y: -8)
 
-            // … plus a brighter white-blue core for a luminous "absorb" feel.
-            RadialGradient(
-                gradient: Gradient(colors: [
-                    Color(red: 0.82, green: 0.91, blue: 1.0).opacity(0.75),
-                    Color(red: 0.82, green: 0.91, blue: 1.0).opacity(0.0),
-                ]),
-                center: .center, startRadius: 0, endRadius: 56)
-                .frame(width: 150, height: 100)
-                .blur(radius: 9)
-                .offset(y: nh + 6)
+            // 2. Blue glow overlay (soft ambient fill)
+            Color(hex: "#8CC5FF")
+                .opacity(0.18)
+                .blur(radius: 18)
+                .frame(width: 290, height: nh + 80)
+                .offset(y: -8)
 
-            // Cloud sitting in the notch band, centered.
+            // 3. Blue edge stroke (Invoko-style edge glow)
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(glowColor.opacity(0.45), lineWidth: 1.2)
+                .frame(width: 290, height: nh + 80)
+                .offset(y: -8)
+
+            // 4. Cloud sitting in the notch band, centered.
             RiveCloudView()
                 .frame(width: 46, height: 32)
                 .frame(maxWidth: .infinity)
                 .frame(height: nh)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: nh + 78)
+        .frame(height: nh + 80)
+        .shadow(color: glowColor.opacity(0.35), radius: 12, y: 4)
     }
 
     // MARK: floating cloud (free on the desktop) — double-click to expand
