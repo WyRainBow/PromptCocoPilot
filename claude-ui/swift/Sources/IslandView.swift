@@ -64,7 +64,7 @@ struct IslandRoot: View {
     /// rounded bottom corners land right on the menu-bar line. Grows wider on hover.
     private func dockHang(_ hovered: Bool) -> CGFloat { 0 }
     private func dockWidth(_ hovered: Bool) -> CGFloat {
-        state.notch.width + (hovered ? 116 : 76)
+        state.notch.width + (hovered ? 145 : 105)
     }
 
     // MARK: fold-cue preview — cloud snapped to the notch with a soft blue glow

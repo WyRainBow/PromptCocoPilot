@@ -537,7 +537,7 @@ final class IslandWindowController {
             // Flush menu-bar-height handle (Invoko resident notch / CodeIsland):
             // cloud in the wing beside the camera, NOTHING below the menu bar.
             // Must match IslandView dockWidth / dockHang (hang = 0).
-            let w = state.notch.width + (state.notchHovered ? 116 : 76)
+            let w = state.notch.width + (state.notchHovered ? 145 : 105)
             return NSSize(width: w, height: nh)
         }
         return cloudSize
