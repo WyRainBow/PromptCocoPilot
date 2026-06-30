@@ -35,48 +35,66 @@ struct RiveCloudView: View {
         vm = RiveCloudView.make(s)
     }
 
-    /// (file, artboard, stateMachine) per mascot state.
-    /// Artboard/SM names extracted from .riv files via `riv_diag`.
+    /// (file, artboard, animationName) per mascot state.
+    /// Artboard/SM names extracted from .riv files via `riv_check`.
+    /// Use animationName for looping/idle animations (blink baked in).
+    /// Use stateMachineName only for complex multi-state animations.
     @MainActor
     static func make(_ s: MascotState) -> RiveViewModel? {
-        let cfg: (file: String, artboard: String?, sm: String?)
+        let cfg: (file: String, artboard: String?, anim: String?, sm: String?)
         switch s {
-        case .idle:          cfg = ("IPDefaultIdle",           "idle",          "State Machine 1")
-        case .thinking:      cfg = ("IPDefaultThinking",        nil,             "Thinking")
-        case .routing:      cfg = ("IPDefaultRouting",         nil,             "routing")
-        case .listening:     cfg = ("IPDefaultListening",      nil,             "Listen")
-        case .outputting:    cfg = ("IPDefaultOutputting",     nil,             "Outputting")
-        case .done:          cfg = ("IPDefaultDone",           "task complete",  "Task Complete")
-        case .error:         cfg = ("IPDefaultError",          nil,             "error")
-        case .typing:        cfg = ("IPDefaultTyping",         nil,             "Typing")
-        case .authorization: cfg = ("IPDefaultAuthorization",   nil,             "authorization")
-        case .recording:     cfg = ("IPDefaultWaveform",       nil,             "Recording")
-        case .notification:  cfg = ("IPDefaultNotification",   nil,             "notification")
-        case .sparkle:       cfg = ("IPDefaultSparkle",        nil,             "Agent background")
-        case .acknowledge:    cfg = ("IPDefaultAcknowledge",    nil,             "Task done")
-        case .backgroundHint: cfg = ("IPDefaultBackgroundHint", nil,             "background hint")
-        case .help:          cfg = ("IPDefaultHelp",          nil,             "Ask Human")
+        // ── Core lifecycle ───────────────────────────────────────────
+        // idle: Timeline 1 is a looping animation with baked-in blink cycle.
+        // Do NOT use the SM — the SM requires the `blink` boolean input to be
+        // driven externally and does not auto-blink on its own.
+        case .idle:          cfg = ("IPDefaultIdle",           "idle",           "Timeline 1", nil)
+        // thinking/routing/outputting/listening: SM controls multi-phase animation.
+        case .thinking:      cfg = ("IPDefaultThinking",        nil,             nil, "Thinking")
+        case .routing:       cfg = ("IPDefaultRouting",         nil,             nil, "routing")
+        case .listening:     cfg = ("IPDefaultListening",      nil,             nil, "Listen")
+        case .outputting:    cfg = ("IPDefaultOutputting",     nil,             nil, "Outputting")
+        case .done:          cfg = ("IPDefaultDone",           "task complete",   nil, "Task Complete")
+        case .error:         cfg = ("IPDefaultError",          nil,             nil, "error")
+
+        // ── Input branch ─────────────────────────────────────────────
+        case .typing:        cfg = ("IPDefaultTyping",         nil,             nil, "Typing")
+
+        // ── Authorization branch ─────────────────────────────────────
+        case .authorization: cfg = ("IPDefaultAuthorization",  nil,             nil, "authorization")
+
+        // ── Notification / background ─────────────────────────────────
+        case .recording:     cfg = ("IPDefaultWaveform",       nil,             nil, "Recording")
+        case .notification:  cfg = ("IPDefaultNotification",   nil,             nil, "notification")
+        case .sparkle:       cfg = ("IPDefaultSparkle",        nil,             nil, "Agent background")
+
+        // ── UI feedback ─────────────────────────────────────────────
+        case .acknowledge:    cfg = ("IPDefaultAcknowledge",   nil,             nil, "Task done")
+        case .backgroundHint: cfg = ("IPDefaultBackgroundHint", nil,           nil, "background hint")
+        case .help:          cfg = ("IPDefaultHelp",          nil,             nil, "Ask Human")
         }
         guard let url = rivURL(cfg.file),
               let data = try? Data(contentsOf: url),
               let file = try? RiveFile(data: data, loadCdn: false)
         else { return nil }
 
-        let vm: RiveViewModel?
-        if let ab = cfg.artboard {
-            vm = RiveViewModel(RiveModel(riveFile: file),
-                               stateMachineName: cfg.sm,
-                               fit: .contain,
-                               artboardName: ab)
-        } else {
-            vm = RiveViewModel(RiveModel(riveFile: file),
-                               stateMachineName: cfg.sm,
-                               fit: .contain)
+        let model = RiveModel(riveFile: file)
+        if let anim = cfg.anim {
+            // Loop an animation directly — use this for idle/blink where the
+            // animation itself contains the blink cycle (no SM input needed).
+            return RiveViewModel(model,
+                                 animationName: anim,
+                                 fit: .contain,
+                                 artboardName: cfg.artboard)
+        } else if let sm = cfg.sm {
+            // State machine: also enable blinking via the `blink` boolean input.
+            let vm = RiveViewModel(model,
+                                   stateMachineName: sm,
+                                   fit: .contain,
+                                   artboardName: cfg.artboard)
+            vm.setInput("blink", value: true)
+            return vm
         }
-        // Enable blinking on every state that has a `blink` boolean input.
-        // Without this, the SM entry state defaults to `no blink` (false).
-        vm?.setInput("blink", value: true)
-        return vm
+        return nil
     }
 
     private static func rivURL(_ name: String) -> URL? {
