@@ -180,9 +180,10 @@ struct IslandRoot: View {
 
     // MARK: docked bar — hugs the notch via NotchPanelShape (shoulders + skirt)
 
-    /// The full docked canvas: a black bar same height as the notch, with
-    /// cloud on the left wing and three dots on the right wing, center transparent
-    /// so the camera cutout shows through.
+    /// The full docked canvas:
+    /// - Silent (not hovered): solid black rounded rect, fully opaque — window
+    ///   itself is the shape, no transparency.
+    /// - Hovered: semi-transparent capsule with blur edge.
     private var dockedCanvas: some View {
         let nh = max(24, state.notch.height)
         let hovered = state.notchHovered
@@ -190,26 +191,49 @@ struct IslandRoot: View {
 
         // Camera cutout is fixed ~185pt, centered in the bar
         let cameraW: CGFloat = 185
+        let cornerR: CGFloat = nh / 2  // round to half-height for capsule
 
-        return HStack(spacing: 0) {
-            // Left wing: cloud (fixed size)
-            RiveCloudView()
-                .frame(width: nh, height: nh)
+        return ZStack(alignment: .center) {
+            // Full-coverage background (silence any window transparency)
+            RoundedRectangle(cornerRadius: cornerR, style: .continuous)
+                .fill(hovered ? Color(hex: "1a1a2e").opacity(0.70)
+                               : Color.black)
 
-            // Center: transparent (camera cutout)
-            Color.clear
-                .frame(width: cameraW)
-
-            // Right wing: three dots
-            HStack(spacing: 6) {
-                Circle().fill(Color.white.opacity(0.55)).frame(width: 4, height: 4)
-                Circle().fill(Color.white.opacity(0.55)).frame(width: 4, height: 4)
-                Circle().fill(Color.white.opacity(0.55)).frame(width: 4, height: 4)
+            if hovered {
+                // Hovered: add blur border on top of the semi-transparent bg
+                RoundedRectangle(cornerRadius: cornerR, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.18),
+                                Color.white.opacity(0.06),
+                                Color.white.opacity(0.0),
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
             }
-            .frame(width: nh, height: nh)
+
+            // Content: cloud left, dots right, center transparent
+            HStack(spacing: 0) {
+                RiveCloudView()
+                    .frame(width: nh, height: nh)
+
+                Color.clear
+                    .frame(width: cameraW)
+
+                HStack(spacing: 6) {
+                    Circle().fill(Color.white.opacity(0.55)).frame(width: 4, height: 4)
+                    Circle().fill(Color.white.opacity(0.55)).frame(width: 4, height: 4)
+                    Circle().fill(Color.white.opacity(0.55)).frame(width: 4, height: 4)
+                }
+                .frame(width: nh, height: nh)
+            }
+            .frame(width: dw, height: nh)
         }
         .frame(width: dw, height: nh)
-        .background(Color.black.opacity(0.85))
     }
 
     /// Resident docked: empty in silent mode — content is in dockedCanvas.
