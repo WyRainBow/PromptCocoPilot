@@ -80,7 +80,7 @@ struct IslandRoot: View {
     /// Capsule方案：宽=刘海开孔宽，高=刘海高，居中放在开孔正下方。
     private func dockHang(_ hovered: Bool) -> CGFloat { 0 }
     private func dockWidth(_ hovered: Bool) -> CGFloat {
-        state.notch.width + (hovered ? 20 : 0)
+        state.notch.width + (hovered ? 200 : 150)
     }
 
     // MARK: fold-cue preview — cloud snapped to the notch with a soft blue glow
@@ -92,6 +92,7 @@ struct IslandRoot: View {
         let nh = max(24, state.notch.height)
         let dw = dockWidth(true)   // same as hovered docked width
         let glowColor = Color(hex: "#8CC5FF")
+        let capsuleH: CGFloat = 96  // match floating cloud height
 
         return ZStack(alignment: .top) {
             // Layer 1: Outer glow — wide, soft halo
@@ -140,9 +141,9 @@ struct IslandRoot: View {
             // Layer 4: The capsule bar — dark glass with cloud centered
             ZStack {
                 RiveCloudView()
-                    .frame(width: nh * 0.9, height: nh * 0.9)
+                    .frame(width: capsuleH, height: capsuleH)
             }
-            .frame(width: dw, height: nh)
+            .frame(width: dw, height: capsuleH)
             .background(
                 Capsule()
                     .fill(Color(hex: "1a1a2e").opacity(0.70))
@@ -164,7 +165,6 @@ struct IslandRoot: View {
             )
         }
         .frame(maxWidth: .infinity)
-        .frame(height: nh)
     }
 
     // MARK: floating cloud (free on the desktop) — double-click to expand
